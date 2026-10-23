@@ -38,7 +38,13 @@ export const brandSchema = z
 
 export type Brand = z.infer<typeof brandSchema>;
 
-export const DEFAULT_BRAND: Brand = { name: "OpenMausBot" };
+export const DEFAULT_BRAND: Brand = {
+  name: "HITEK Agent Desk",
+  tagline: "AI operations for HITEK dealers",
+  accent: "#E51717",
+  logo: "/hitek-wordmark.svg",
+  favicon: "/hitek-app-icon.svg",
+};
 
 export interface BrandStatus {
   brand: Brand;

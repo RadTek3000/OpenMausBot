@@ -1,10 +1,12 @@
-appId: com.openmausbot.app
-productName: OpenMausBot
-artifactName: OpenMausBot-${version}-${arch}.${ext}
+appId: com.hitek.agentdesk
+productName: HITEK Agent Desk
+artifactName: HITEK-Agent-Desk-${version}-${arch}.${ext}
 
 protocols:
-  - name: OpenMausBot package install
-    schemes: [openmausbot]
+  - name: HITEK Agent Desk package install
+    # Keep the upstream scheme registered so existing dealer links continue to work
+    # while new HITEK links can use the branded scheme.
+    schemes: [hitekagent, openmausbot]
 
 # In-app auto-update reads latest-mac.yml + the .zip (macOS) or latest.yml +
 # the NSIS .exe (Windows) from the PUBLIC releases in this source repo.
@@ -15,7 +17,7 @@ protocols:
 # stranded on its installed version.
 publish:
   - provider: github
-    owner: milind-soni
+    owner: RadTek3000
     repo: OpenMausBot
 
 directories:
@@ -180,11 +182,11 @@ win:
 nsis:
   oneClick: true
   perMachine: false
-  shortcutName: OpenMausBot
+  shortcutName: HITEK Agent Desk
   # Versioned, like the .dmg. The README's /latest/download/ button needs a
   # STABLE filename, so ship a second copy named OpenMausBot-setup.exe on the
   # release — the same trick as OpenMausBot.dmg beside OpenMausBot-${version}.dmg.
-  artifactName: OpenMausBot-${version}-setup.${ext}
+  artifactName: HITEK-Agent-Desk-${version}-setup.${ext}
 
 linux:
   target:
@@ -194,13 +196,13 @@ linux:
       arch: x64
   # Keep the vector source in the freedesktop scalable icon hierarchy. A
   # lone 1024px PNG is not indexed by GNOME's hicolor theme on Ubuntu 24.04.
-  icon: build/icon.svg
+  icon: build/hitek-app-icon.svg
   category: Utility
-  executableName: openmausbot
-  synopsis: Your own team of AI bots, in a chat app
-  description: A local-first chat app for running a team of AI agents.
-  maintainer: Milind Soni <46266943+milind-soni@users.noreply.github.com>
-  vendor: OpenMausBot
+  executableName: hitek-agent-desk
+  synopsis: HITEK AI operations for dealers
+  description: A hosted AI operations desk for HITEK dealers.
+  maintainer: HITEK
+  vendor: HITEK
   syncDesktopName: true
   # The reviewed x64 CLI runtime is staged before packaging and remains
   # outside ASAR so executable modes and adjacent sidecars are preserved.
@@ -217,8 +219,8 @@ linux:
       to: openmausbot-browser.apparmor
   desktop:
     entry:
-      Name: OpenMausBot
-      Comment: Your own team of AI bots, in a chat app
+      Name: HITEK Agent Desk
+      Comment: HITEK AI operations for dealers
       Keywords: AI;Agents;Chat;Productivity;
 
 deb:

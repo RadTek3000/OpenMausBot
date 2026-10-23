@@ -1,0 +1,19 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">HITEK Agent Desk</title>
+  <desc id="desc">HITEK red mark on a black rounded square.</desc>
+  <defs>
+    <linearGradient id="hitek-red" x1="512" y1="160" x2="512" y2="864" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF0000" />
+      <stop offset="1" stop-color="#780000" />
+    </linearGradient>
+    <clipPath id="tile"><rect width="1024" height="1024" rx="224" /></clipPath>
+  </defs>
+  <g clip-path="url(#tile)">
+    <rect width="1024" height="1024" fill="#080808" />
+    <g transform="translate(335 194) scale(14.16)" fill="url(#hitek-red)">
+      <path d="M4.08696 0L2.72464 8.85507H23.1594L24.5217 0H4.08696Z" />
+      <path d="M2.72464 13.6232L1.36232 22.4783H21.7971L23.1594 13.6232H2.72464Z" />
+      <path d="M1.36232 27.9275L0 36.7826H20.4348L21.7971 27.9275H1.36232Z" />
+    </g>
+  </g>
+</svg>

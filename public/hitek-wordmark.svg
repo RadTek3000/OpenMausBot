@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 412.67 105.8" role="img" aria-labelledby="title">
+  <title id="title">HITEK</title>
+  <defs>
+    <linearGradient id="hitek-wordmark-red" x2="94.28" y1="52.9" y2="52.9" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#e51717" />
+      <stop offset="1" stop-color="#900" />
+    </linearGradient>
+  </defs>
+  <g fill="url(#hitek-wordmark-red)">
+    <path d="M94.28 0 79.35 105.8H52.9l5.55-39.6H31.97l-5.52 39.6H0L14.68 0h26.53l-5.55 39.75h26.51L67.75 0h26.53z" />
+    <path d="m134.08 0-15.06 105.8H92.57L107.54 0h26.54z" />
+    <path d="m226.94 0-3.84 26.51h-26.52l-11.44 79.29h-26.45l11.38-79.29h-26.51L147.34 0h79.6z" />
+    <path d="m306.54 0-3.91 26.51h-66.28L240.21 0h66.33z" />
+    <path d="m294.83 79.41-3.89 26.39h-66.12l3.84-26.39h66.17z" />
+    <path d="m300.68 39.75-3.9 26.45h-66.2l3.85-26.45h66.25z" />
+    <path d="M396.74 105.8h-33.51l-27.78-32.55-4.84 32.55h-26.45L319.81 0h26.53l-4.86 32.69L379.06 0h33.61l-60.96 52.98 45.03 52.82z" />
+  </g>
+</svg>

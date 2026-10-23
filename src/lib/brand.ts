@@ -14,7 +14,13 @@ export interface BrandStatus {
   notice?: string;
 }
 
-export const DEFAULT_BRAND: Brand = { name: "OpenMausBot" };
+export const DEFAULT_BRAND: Brand = {
+  name: "HITEK Agent Desk",
+  tagline: "AI operations for HITEK dealers",
+  accent: "#E51717",
+  logo: "/hitek-wordmark.svg",
+  favicon: "/hitek-app-icon.svg",
+};
 
 let current: BrandStatus = { brand: DEFAULT_BRAND, source: "default", file: "" };
 

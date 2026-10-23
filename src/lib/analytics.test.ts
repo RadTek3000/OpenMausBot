@@ -79,6 +79,7 @@ afterEach(() => vi.stubGlobal("localStorage", baseStorage));
 
 // resetModules keeps the mocked posthog-js cached, so it is registered again and `loads` counts this graph only.
 async function freshAnalytics() {
+  if (!store.has("omb-analytics-opt-out")) store.set("omb-analytics-opt-out", "0");
   vi.resetModules();
   vi.doMock("posthog-js", () => ph.module());
   return import("./analytics");
@@ -105,8 +106,8 @@ describe("optAction", () => {
 });
 
 describe("the stored choice", () => {
-  it("is on for a fresh install", () => {
-    expect(analyticsEnabled()).toBe(true);
+  it("is off for a fresh install", () => {
+    expect(analyticsEnabled()).toBe(false);
   });
 
   it("survives a restart once opted out", () => {
@@ -138,7 +139,7 @@ describe("the stored choice", () => {
     expect(store.get("omb-installed")).toBeUndefined();
   });
 
-  it("treats unusable storage as a fresh install rather than failing", () => {
+  it("treats unusable storage as a fresh install rather than failing", async () => {
     vi.stubGlobal("localStorage", {
       getItem: () => {
         throw new Error("denied");
@@ -147,8 +148,9 @@ describe("the stored choice", () => {
         throw new Error("denied");
       },
     });
-    expect(analyticsEnabled()).toBe(true);
-    expect(() => setAnalyticsEnabled(false)).not.toThrow();
+    const fresh = await freshAnalytics();
+    expect(fresh.analyticsEnabled()).toBe(false);
+    expect(() => fresh.setAnalyticsEnabled(false)).not.toThrow();
   });
 });
 
