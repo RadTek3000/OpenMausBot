@@ -1,5 +1,6 @@
 import { createContext, memo, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type Dispatch } from "react";
 import { useAdvancedMode } from "@/lib/interface-mode";
+import { rebrandDisplayedText } from "@/lib/brand";
 import { ThreadLinkContext } from "@/components/ThreadLinkMenu";
 import { useShowThreads } from "@/lib/thread-preferences";
 import { AlertTriangle, ChevronLeft, ChevronRight, Crown, Monitor, RefreshCw, Square, Webhook } from "lucide-react";
@@ -404,7 +405,7 @@ const Bubble = memo(function Bubble({
   const speech = useSpeech();
   const speaking = speech.messageId === message.id && speech.status !== "idle";
   const rawText = peer ? peer.body : (message.text ?? "");
-  const text = user ? rawText : stripLeakedSystemHarnessMessages(rawText);
+  const text = user ? rawText : stripLeakedSystemHarnessMessages(rebrandDisplayedText(rawText));
   const botMenu = useBotMessageMenu({
     text,
     botId,

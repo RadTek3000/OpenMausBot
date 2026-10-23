@@ -17,8 +17,15 @@ export const brandSchema = z
     name: z.string().trim().min(1, "name must not be empty").max(40, "name must be 40 characters or fewer"),
     /** One line under the name on the welcome screen. */
     tagline: z.string().trim().max(120, "tagline must be 120 characters or fewer").optional(),
+    /** Name shown for the built-in assistant; separate so deployments can brand the product and assistant independently. */
+    assistantName: z.string().trim().min(1, "assistantName must not be empty").max(40, "assistantName must be 40 characters or fewer").optional(),
+    /** Name shown for hosted account and cloud surfaces. */
+    cloudName: z.string().trim().min(1, "cloudName must not be empty").max(40, "cloudName must be 40 characters or fewer").optional(),
     /** Accent colour for buttons, links and focus rings; text on it is derived for contrast. */
     accent: z.string().regex(HEX_COLOUR, "accent must be a 6-digit hex colour such as #C2510A").optional(),
+    /** Optional brighter tones for borders and text when the base accent is used on a dark skin. */
+    accentBorder: z.string().regex(HEX_COLOUR, "accentBorder must be a 6-digit hex colour").optional(),
+    accentText: z.string().regex(HEX_COLOUR, "accentText must be a 6-digit hex colour").optional(),
     /** Welcome-screen mark: an inline data:image/... URI or an https:// URL. */
     logo: z
       .string()
@@ -27,6 +34,8 @@ export const brandSchema = z
       .optional(),
     /** Where "get help" points for this deployment. */
     supportUrl: z.string().url().startsWith("https://", "supportUrl must be an https:// URL").optional(),
+    /** Organization sign-in origin for this deployment; supplied by the host rather than embedded in the client. */
+    portalOrigin: z.string().url().startsWith("https://", "portalOrigin must be an https:// URL").optional(),
     /** Tab and home-screen icon: an inline data:image/... URI (PNG or SVG, small) or an https:// URL. */
     favicon: z
       .string()
@@ -41,7 +50,11 @@ export type Brand = z.infer<typeof brandSchema>;
 export const DEFAULT_BRAND: Brand = {
   name: "HITEK Agent Desk",
   tagline: "AI operations for HITEK dealers",
+  assistantName: "HITEK Agent",
+  cloudName: "HITEK Cloud",
   accent: "#E51717",
+  accentBorder: "#FF3B30",
+  accentText: "#FF625C",
   logo: "/hitek-wordmark.svg",
   favicon: "/hitek-app-icon.svg",
 };
@@ -88,4 +101,33 @@ export function loadBrand(options: { file?: string; isEntitled?: (feature: strin
 export function describeBrand(status: BrandStatus): string {
   if (status.source === "file") return `brand: ${status.brand.name} (from ${status.file})`;
   return `brand: default${status.notice ? ` (${status.notice})` : ""}`;
+}
+
+/** Runtime labels for server-generated prompts and errors. */
+export function productName(): string {
+  return loadBrand().brand.name;
+}
+
+export function assistantDisplayName(): string {
+  const brand = loadBrand().brand;
+  return brand.assistantName?.trim() || brand.name.trim() || "Assistant";
+}
+
+export function cloudProductName(): string {
+  const brand = loadBrand().brand;
+  return brand.cloudName?.trim() || `${brand.name.trim()} Cloud`;
+}
+
+/** Replace legacy product labels in text sent to an agent; wire identifiers stay unchanged. */
+export function rebrandAgentText(text: string): string {
+  const brand = loadBrand().brand;
+  const product = brand.name.trim() || DEFAULT_BRAND.name;
+  const assistant = brand.assistantName?.trim() || product || "Assistant";
+  const cloud = brand.cloudName?.trim() || `${product} Cloud`;
+  return text
+    .replaceAll("OpenMausBot Cloud", cloud)
+    .replaceAll("MausBot Cloud", cloud)
+    .replaceAll("OpenMausBot", product)
+    .replaceAll("MausBot", assistant)
+    .replace(/(?<![A-Za-z0-9_.-])openmausbot(?![A-Za-z0-9_.:\/-])/gi, product);
 }

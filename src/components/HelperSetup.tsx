@@ -26,7 +26,7 @@ export function setupAction(step: SetupStep): Action {
   }
 }
 
-/** What is left to set up, under MausBot's intro on a new install. */
+/** What is left to set up, under the HITEK Agent intro on a new install. */
 export function HelperSetup() {
   const { state, dispatch } = useStore();
   const steps = setupSteps({

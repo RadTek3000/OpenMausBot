@@ -32,6 +32,7 @@ import { defaultResponderName, effectiveDefaultResponder, groupResponseHint, jev
 import { ChatMarkdown } from "./ChatMarkdown";
 import { FailedTurnRow, MessageBoundary, SIMPLE_BUBBLE } from "./ChatView";
 import { useAdvancedMode } from "@/lib/interface-mode";
+import { rebrandDisplayedText } from "@/lib/brand";
 import { CopyButton, MESSAGE_ROW, MessageActions, messageActionClass, ReplyAction } from "./MessageActions";
 import { ReactAction, ReactionChips, useCanReact } from "./Reactions";
 import { ClusterLabel } from "./RoomClusterLabel";
@@ -172,7 +173,7 @@ function RoomTextMessage({
   const user = m.role === "user";
   const reactor = useReactor();
   const speaker = otherSpeaker(m, state.config?.team && reactor !== "user" ? reactor : null);
-  const rawText = user ? (m.text ?? "") : stripLeakedSystemHarnessMessages(m.text ?? "");
+  const rawText = user ? (m.text ?? "") : rebrandDisplayedText(stripLeakedSystemHarnessMessages(m.text ?? ""));
   const cited = user && m.text ? splitTranscriptCitations(m.text) : null;
   const attachments = user && m.text ? splitTranscriptAttachments(cited?.display ?? m.text) : null;
   const display = attachments?.display ?? rawText;

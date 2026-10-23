@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { FLIGHT_MS, LANDING_MS, landInSidebar } from "./mausbot-landing";
+import { FLIGHT_MS, LANDING_MS, landInSidebar } from "./agent-landing";
 
 type Played = { el: Element; keyframes: Keyframe[]; options: KeyframeAnimationOptions; finish(): void };
 let played: Played[] = [];

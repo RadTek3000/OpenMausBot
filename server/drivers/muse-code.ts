@@ -26,6 +26,7 @@ import { parseProtocolAskQuestions, questionAnswersById, type ProtocolAskQuestio
 import type { EffortLevel } from "../../shared/wire.ts";
 import { promptHalves, readPromptSplitReceipt, splitSessionPrompt, writePromptSplitReceipt, type PromptSplitReceipt } from "./prompt-split.ts";
 import { turnStdioMcpServers } from "./turn-mcp.ts";
+import { rebrandAgentText } from "../brand.ts";
 
 const DRIVER_KIND = "museCode";
 const PROVIDER_ID = "meta";
@@ -554,6 +555,12 @@ export const MuseCodeDriver: ProviderDriver<MuseConfig> = {
     };
 
     const runTurn = async (state: ThreadState, turn: SendTurnInput, active: ActiveTurn) => {
+      turn = {
+        ...turn,
+        ...(turn.system !== undefined ? { system: rebrandAgentText(turn.system) } : {}),
+        ...(turn.systemStable !== undefined ? { systemStable: rebrandAgentText(turn.systemStable) } : {}),
+        ...(turn.systemVolatile !== undefined ? { systemVolatile: rebrandAgentText(turn.systemVolatile) } : {}),
+      };
       const threadId = turn.threadId;
       try {
         const session = await ensureSession(state, turn, active.turnId);

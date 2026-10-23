@@ -1,10 +1,15 @@
 export interface Brand {
   name: string;
   tagline?: string;
+  assistantName?: string;
+  cloudName?: string;
   accent?: string;
+  accentBorder?: string;
+  accentText?: string;
   logo?: string;
   favicon?: string;
   supportUrl?: string;
+  portalOrigin?: string;
 }
 
 export interface BrandStatus {
@@ -17,7 +22,11 @@ export interface BrandStatus {
 export const DEFAULT_BRAND: Brand = {
   name: "HITEK Agent Desk",
   tagline: "AI operations for HITEK dealers",
+  assistantName: "HITEK Agent",
+  cloudName: "HITEK Cloud",
   accent: "#E51717",
+  accentBorder: "#FF3B30",
+  accentText: "#FF625C",
   logo: "/hitek-wordmark.svg",
   favicon: "/hitek-app-icon.svg",
 };
@@ -30,6 +39,27 @@ export function brand(): Brand {
 
 export function brandStatus(): BrandStatus {
   return current;
+}
+
+export function assistantName(b: Brand = current.brand): string {
+  return b.assistantName?.trim() || b.name.trim() || "Assistant";
+}
+
+export function cloudName(b: Brand = current.brand): string {
+  return b.cloudName?.trim() || `${b.name.trim()} Cloud`;
+}
+
+/** Normalize legacy assistant labels when displaying messages saved before a rebrand. */
+export function rebrandDisplayedText(text: string): string {
+  const product = brand().name.trim() || DEFAULT_BRAND.name;
+  const assistant = assistantName();
+  const cloud = cloudName();
+  return text
+    .replaceAll("OpenMausBot Cloud", cloud)
+    .replaceAll("MausBot Cloud", cloud)
+    .replaceAll("OpenMausBot", product)
+    .replaceAll("MausBot", assistant)
+    .replace(/(?<![A-Za-z0-9_.-])openmausbot(?![A-Za-z0-9_.:\/-])/gi, product);
 }
 
 const HEX = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i;
@@ -52,11 +82,13 @@ export function accentInk(accent: string): string {
 
 export function brandVars(b: Brand): Record<string, string> {
   if (!b.accent || !HEX.test(b.accent)) return {};
+  const border = b.accentBorder && HEX.test(b.accentBorder) ? b.accentBorder : b.accent;
+  const text = b.accentText && HEX.test(b.accentText) ? b.accentText : b.accent;
   return {
     "--color-accent": b.accent,
-    "--color-accent-border": b.accent,
-    "--color-focus": b.accent,
-    "--color-accent-text": b.accent,
+    "--color-accent-border": border,
+    "--color-focus": border,
+    "--color-accent-text": text,
     "--color-accent-ink": accentInk(b.accent),
   };
 }

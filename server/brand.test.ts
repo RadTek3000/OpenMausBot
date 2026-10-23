@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { DEFAULT_BRAND, describeBrand, loadBrand } from "./brand.ts";
+import { DEFAULT_BRAND, describeBrand, loadBrand, rebrandAgentText } from "./brand.ts";
 
 const dirs: string[] = [];
 const licensed = (feature: string) => feature === "whitelabel";
@@ -84,5 +84,12 @@ describe("the brand's favicon", () => {
     expect(brandSchema.safeParse({ name: "Agent Ada", favicon: "http://agentada.cc/icon.png" }).success).toBe(false);
     expect(brandSchema.safeParse({ name: "Agent Ada", favicon: "/icon.png" }).success).toBe(false);
     expect(brandSchema.safeParse({ name: "Agent Ada", favicon: `data:image/png;base64,${"A".repeat(130_000)}` }).success).toBe(false);
+  });
+});
+
+describe("agent prompt branding", () => {
+  it("replaces legacy labels without rewriting protocol identifiers", () => {
+    const text = "OpenMausBot and MausBot Cloud are ready; use openmausbot setup or /.well-known/openmausbot/environment.";
+    expect(rebrandAgentText(text)).toBe("HITEK Agent Desk and HITEK Cloud are ready; use HITEK Agent Desk setup or /.well-known/openmausbot/environment.");
   });
 });

@@ -1,7 +1,7 @@
 import { Check, X } from "lucide-react";
 import { MausAvatar } from "@/components/Avatar";
 import { cn } from "@/lib/cn";
-import { brand } from "@/lib/brand";
+import { assistantName } from "@/lib/brand";
 
 export function PhonePreview({ className }: { className?: string }) {
   return (
@@ -18,7 +18,7 @@ export function PhonePreview({ className }: { className?: string }) {
           </div>
           <div className="flex items-center gap-1.5 border-b border-hairline/40 px-3 py-1.5">
             <MausAvatar color="green" state="happy" size={16} animated={false} trackPointer={false} />
-            <span className="text-[9.5px] font-semibold text-ink">Maus</span>
+            <span className="text-[9.5px] font-semibold text-ink">{assistantName()}</span>
             <span className="ml-auto size-1.5 rounded-full bg-success" />
           </div>
           <div className="flex flex-col gap-1.5 px-2.5 py-2.5">
@@ -42,7 +42,7 @@ export function PhonePreview({ className }: { className?: string }) {
             </div>
           </div>
           <div className="mx-2.5 mb-2.5 rounded-full border border-hairline/40 bg-inset px-2.5 py-1.5 text-[8px] text-ink-secondary">
-            Message {brand().name === "OpenMausBot" ? "Maus" : brand().name}
+            Message {assistantName()}
           </div>
         </div>
       </div>

@@ -4,6 +4,7 @@ import { ExternalLink, KeyRound, Loader2, LockKeyhole, RefreshCw, X } from "luci
 import { credentialResumeOutcome, credentialSaveRequest, isConfigCredentialTarget } from "../../shared/credential-request";
 import { credentialProvider } from "@/lib/analytics-allowlist";
 import { cn } from "@/lib/cn";
+import { brand } from "@/lib/brand";
 import { keySaved, keySaveFailure, savedKeyResult } from "@/lib/product-events";
 import { api, useStore, type ConfigStatus, type Message } from "@/state/store";
 import { ASK_FIELD, ASK_PRIMARY_BUTTON, ASK_QUIET_BUTTON, AskCard, AskSettledLine, returnFocusToComposer } from "./AskCard";
@@ -42,7 +43,7 @@ export function SecretRequestCard({
       ? "Saved securely. Your bot is continuing the task."
       : "Saved securely. Your bot will continue when its current turn settles."
     : declined
-      ? "You chose not to provide this credential. OpenMausBot could not resume the bot yet."
+      ? `You chose not to provide this credential. ${brand().name} could not resume the bot yet.`
       : secret.description;
   const footerLabel = stopped
     ? "Stopped"
@@ -199,7 +200,7 @@ export function SecretRequestCard({
           </div>
           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11.5px] text-ink-tertiary">
             <span className="flex items-center gap-1">
-              <LockKeyhole size={11} /> Stored securely by OpenMausBot and never added to chat.
+              <LockKeyhole size={11} /> Stored securely by {brand().name} and never added to chat.
             </span>
             <a
               href={secret.helpUrl}

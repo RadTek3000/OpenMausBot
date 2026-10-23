@@ -59,6 +59,7 @@ import { canUseMcpServer } from "../../shared/tool-scope.ts";
 import { assertToolScopeSupported } from "../../shared/tool-scope-support.ts";
 import { appMountFor, gateServer, mcpStdioServer } from "../mcp-gate-config.ts"; import { OWN_APPS_SERVER } from "../../shared/own-apps.ts";
 import { CALL_TOOL, DESCRIBE_TOOL, SEARCH_TOOL, directoryCallTarget } from "../mcp-directory.ts"; import { codexPatchProgress } from "./tool-progress.ts";
+import { rebrandAgentText } from "../brand.ts";
 
 export { decodeCodexSelection, readCodexModelCatalog, STATIC_CODEX_MODELS } from "./codex-catalog.ts";
 
@@ -175,8 +176,9 @@ const PRIVATE_ENV_FAMILIES = ["OMB_GATE_CONFIG_", "OMB_REMOTE_MCP_CONFIG_"];
 const PROXY_LITERAL_ENV = ["NODE_USE_ENV_PROXY", "NO_PROXY", "no_proxy"];
 const SHELL_ESSENTIALS = new Set(["PATH", "HOME", "USER", "LOGNAME", "SHELL", "TMPDIR", "TERM", "LANG", "TZ"]);
 
-const DENY_TIMEOUT_NOTE =
-  "OpenMausBot: nobody answered this permission request in time. Skip this action and finish what you can without it.";
+const DENY_TIMEOUT_NOTE = () => rebrandAgentText(
+  "OpenMausBot: nobody answered this permission request in time. Skip this action and finish what you can without it.",
+);
 
 const renamedMcpServers = new Set<string>();
 function noteRenamedMcpServer(name: string, mountName: string): void {
@@ -646,6 +648,12 @@ export const CodexDriver: ProviderDriver<CodexConfig> = {
 
     const sendTurn = async (turn: SendTurnInput) => {
       if (startupModelRefresh) await startupModelRefresh;
+      turn = {
+        ...turn,
+        ...(turn.system !== undefined ? { system: rebrandAgentText(turn.system) } : {}),
+        ...(turn.systemStable !== undefined ? { systemStable: rebrandAgentText(turn.systemStable) } : {}),
+        ...(turn.systemVolatile !== undefined ? { systemVolatile: rebrandAgentText(turn.systemVolatile) } : {}),
+      };
       turn = { ...turn, toolScope: assertToolScopeSupported(DRIVER_KIND, turn.toolScope) };
       const generation = planGeneration;
       const assertPlanCurrent = () => {
@@ -1121,7 +1129,7 @@ export const CodexDriver: ProviderDriver<CodexConfig> = {
           emit({ ...base(threadId, turnId), type: "request.resolved", requestId, behavior, source });
         };
         const timer = setTimeout(
-          () => finish("deny", isQuestion ? undefined : DENY_TIMEOUT_NOTE, "timeout"),
+          () => finish("deny", isQuestion ? undefined : DENY_TIMEOUT_NOTE(), "timeout"),
           15 * 60_000,
         );
         timer.unref?.();

@@ -1,4 +1,7 @@
-// No imports: harness-mcp-proxy bundles this file into the agent process.
+// Keep this module small: harness-mcp-proxy bundles it into the agent process.
+import { productName } from "../brand.ts";
+
+const PRODUCT_NAME = productName();
 
 /** tools/list instructions for the HighLevel MCP server. */
 export const HIGHLEVEL_INSTRUCTIONS =
@@ -24,10 +27,10 @@ export const HIGHLEVEL_PROMPT =
 
 /** The failed-call text when the connection is signed out: the bot asks the person to reconnect and ends the turn. */
 export const HIGHLEVEL_SIGNED_OUT_TEXT =
-  "OpenMausBot note: HighLevel is signed out (its sign-in expired or was revoked), so this call did not run. " +
-  "Ask the person to reconnect HighLevel under Connected apps in OpenMausBot, then end this turn. Do not retry this call before they reconnect.";
+  `${PRODUCT_NAME} note: HighLevel is signed out (its sign-in expired or was revoked), so this call did not run. ` +
+  `Ask the person to reconnect HighLevel under Connected apps in ${PRODUCT_NAME}, then end this turn. Do not retry this call before they reconnect.`;
 
 /** The failed-call text when no connection exists at all. */
 export const HIGHLEVEL_NOT_CONNECTED_TEXT =
-  "OpenMausBot note: HighLevel is not connected, so this call did not run. " +
-  "Ask the person to connect HighLevel under Connected apps in OpenMausBot, then end this turn.";
+  `${PRODUCT_NAME} note: HighLevel is not connected, so this call did not run. ` +
+  `Ask the person to connect HighLevel under Connected apps in ${PRODUCT_NAME}, then end this turn.`;

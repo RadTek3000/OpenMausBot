@@ -41,6 +41,7 @@ import { claudeApiErrorMessage, claudeEngineReset, claudeLimitRefusal, claudeUsa
 import { TEAM_TOOLS_FAILED, teamToolsFailed } from "./team-tools.ts";
 import { engineIdleMs, sessionIdlePolicy } from "./session-idle.ts";
 import { promptHalves, withVolatileNote } from "./prompt-split.ts";
+import { rebrandAgentText } from "../brand.ts";
 import { parseVersionTriple, versionAtLeast } from "./acp/version-probe.ts";
 import {
   applyClaudeInject,
@@ -352,15 +353,16 @@ interface Ask {
 type AskBehavior = "allow" | "deny" | "answer";
 type AskResolutionSource = "user" | "timeout" | "system";
 
-const DENY_TIMEOUT_NOTE =
-  "OpenMausBot: nobody answered this permission request in time. Skip this action and finish what you can without it.";
-const QUESTION_TIMEOUT_NOTE = "OpenMausBot: nobody answered in time. Use your best judgment and continue.";
-const DUPLICATE_ASK_ID_NOTE = "OpenMausBot: duplicate ask id — skipping this request.";
+const DENY_TIMEOUT_NOTE = () => rebrandAgentText(
+  "OpenMausBot: nobody answered this permission request in time. Skip this action and finish what you can without it.",
+);
+const QUESTION_TIMEOUT_NOTE = () => rebrandAgentText("OpenMausBot: nobody answered in time. Use your best judgment and continue.");
+const DUPLICATE_ASK_ID_NOTE = () => rebrandAgentText("OpenMausBot: duplicate ask id — skipping this request.");
 
 function systemEndedReply(kind: Ask["kind"]): { behavior: AskBehavior; message: string } {
   return kind === "question"
-    ? { behavior: "answer", message: "OpenMausBot: the turn is ending — wrap up." }
-    : { behavior: "deny", message: "OpenMausBot: the turn ended" };
+    ? { behavior: "answer", message: rebrandAgentText("OpenMausBot: the turn is ending — wrap up.") }
+    : { behavior: "deny", message: rebrandAgentText("OpenMausBot: the turn ended") };
 }
 
 function askQuestions(ask: Ask): AskQuestion[] | null {
@@ -513,7 +515,7 @@ export async function createPermissionBroker(opts: {
           // askId is client-controlled; JSON.stringify keeps it from corrupting the log line.
           console.error(`permission broker on ${boundPath}: duplicate ask id ${JSON.stringify(askId)} — denying`);
           try {
-            conn.write(JSON.stringify({ t: "answer", id: askId, behavior: "deny", message: DUPLICATE_ASK_ID_NOTE }) + "\n");
+            conn.write(JSON.stringify({ t: "answer", id: askId, behavior: "deny", message: DUPLICATE_ASK_ID_NOTE() }) + "\n");
           } catch {}
           continue;
         }
@@ -533,8 +535,8 @@ export async function createPermissionBroker(opts: {
         const timer = setTimeout(
           () =>
             kind === "question"
-              ? finish("answer", QUESTION_TIMEOUT_NOTE, "timeout")
-              : finish("deny", DENY_TIMEOUT_NOTE, "timeout"),
+              ? finish("answer", QUESTION_TIMEOUT_NOTE(), "timeout")
+              : finish("deny", DENY_TIMEOUT_NOTE(), "timeout"),
           timeoutMs,
         );
         timer.unref?.();
@@ -1013,6 +1015,12 @@ export const ClaudeDriver: ProviderDriver<ClaudeConfig> = {
 
     const sendTurn = async (turn: SendTurnInput, logicalTurnId?: string) => {
       if (startupModelRefresh) await startupModelRefresh;
+      turn = {
+        ...turn,
+        ...(turn.system !== undefined ? { system: rebrandAgentText(turn.system) } : {}),
+        ...(turn.systemStable !== undefined ? { systemStable: rebrandAgentText(turn.systemStable) } : {}),
+        ...(turn.systemVolatile !== undefined ? { systemVolatile: rebrandAgentText(turn.systemVolatile) } : {}),
+      };
       turn = { ...turn, toolScope: assertToolScopeSupported(DRIVER_KIND, turn.toolScope) };
       if (config.managedModels && (!turn.model || !config.managedModels.includes(turn.model))) throw new Error("This model is not assigned to this workspace.");
       if (config.requireApiKey && !input.environment.ANTHROPIC_API_KEY) throw new Error(NO_ANTHROPIC_KEY);

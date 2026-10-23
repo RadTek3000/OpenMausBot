@@ -6,6 +6,7 @@ import { availableTools, catalogProfileFromEnv } from "./agents-catalog.ts";
 import { callTool, capResult, toolCallContextFromEnv } from "./agents-call.ts";
 import { sendToolReceipt } from "./agents-timing.ts";
 import type { Json } from "./agents-client.ts";
+import { rebrandAgentText } from "../brand.ts";
 
 export function agentsMcp(env: NodeJS.ProcessEnv): (msg: Json) => Promise<Json | undefined> {
   const available = availableTools(catalogProfileFromEnv(env));
@@ -13,7 +14,7 @@ export function agentsMcp(env: NodeJS.ProcessEnv): (msg: Json) => Promise<Json |
   const context = toolCallContextFromEnv(env);
   const ok = (id: unknown, result: unknown): Json => ({ jsonrpc: "2.0", id, result } as Json);
   const rpcErr = (id: unknown, code: number, message: string): Json => ({ jsonrpc: "2.0", id, error: { code, message } } as Json);
-  const textResult = (id: unknown, text: string, isError = false) => ok(id, { content: [{ type: "text", text }], isError });
+  const textResult = (id: unknown, text: string, isError = false) => ok(id, { content: [{ type: "text", text: rebrandAgentText(text) }], isError });
   return async (msg) => {
     const id = msg.id;
     const method = msg.method as string | undefined;

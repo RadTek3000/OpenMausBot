@@ -678,7 +678,7 @@ export function LocalVmWorkspace({
       setControlledBotId(null);
       return true;
     } catch {
-      setControlError("OpenMausBot could not hand control back. The view stayed open.");
+      setControlError("HITEK Agent Desk could not hand control back. The view stayed open.");
       return false;
     } finally {
       controlBusyRef.current = false;

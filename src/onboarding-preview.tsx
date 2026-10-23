@@ -15,7 +15,7 @@ import "./styles.css";
 
 const PREVIEW_BOT = {
   id: "preview-bot",
-  name: "Maus",
+  name: "HITEK Agent",
   color: "green",
   soul: "",
 } as unknown as Bot;
@@ -112,12 +112,12 @@ function Preview() {
   useEffect(() => {
     if (!new URLSearchParams(location.search).has("debug")) return;
     const timer = setTimeout(() => {
-      const paths = document.querySelectorAll<SVGPathElement>(".welcome-maus svg path");
+      const paths = document.querySelectorAll<SVGPathElement>(".welcome-agent svg path");
       paths.forEach((el, i) => {
-        console.log(`[maus-debug] path ${i} d=${(el.getAttribute("d") ?? "").slice(0, 60)} transform=${el.getAttribute("transform") ?? ""} opacity=${el.style.opacity}`);
+        console.log(`[agent-debug] path ${i} d=${(el.getAttribute("d") ?? "").slice(0, 60)} transform=${el.getAttribute("transform") ?? ""} opacity=${el.style.opacity}`);
       });
-      const groups = document.querySelectorAll<SVGGElement>(".welcome-maus svg g[transform]");
-      groups.forEach((el, i) => console.log(`[maus-debug] g ${i} transform=${el.getAttribute("transform")}`));
+      const groups = document.querySelectorAll<SVGGElement>(".welcome-agent svg g[transform]");
+      groups.forEach((el, i) => console.log(`[agent-debug] g ${i} transform=${el.getAttribute("transform")}`));
     }, 3500);
     return () => clearTimeout(timer);
   }, []);

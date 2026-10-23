@@ -1,4 +1,5 @@
 import { en, localeChoices, locales, type LocaleKey, type LocalePack } from "@/locales";
+import { assistantName, brand, cloudName } from "@/lib/brand";
 
 export function resolveLocale(tag: string | undefined, available: ReadonlySet<string>): string {
   if (!tag) return "en";
@@ -49,12 +50,26 @@ let active = "en";
 let activePack: LocalePack = en;
 setLocale(globalThis.navigator?.language);
 
+function rebrandCopy(value: string): string {
+  const product = brand().name.trim();
+  const cloud = cloudName();
+  return value
+    .replaceAll("HITEK Cloud", cloud)
+    .replaceAll("HITEK Agent Desk", product)
+    .replaceAll("HITEK Agent", assistantName())
+    .replaceAll("OpenMausBot Cloud", cloud)
+    .replaceAll("MausBot Cloud", cloud)
+    .replaceAll("MausBot Pro", `${cloud} Pro`)
+    .replaceAll("OpenMausBot", product)
+    .replaceAll("MausBot", assistantName());
+}
+
 export function tFromServer(key: string | undefined, fallback: string | undefined): string | undefined {
   return key && Object.hasOwn(en, key) ? t(key as LocaleKey) : fallback;
 }
 
 export function t(key: LocaleKey, params?: Record<string, string | number>): string {
-  const template = activePack[key] ?? en[key];
+  const template = rebrandCopy(activePack[key] ?? en[key]);
   if (!params) return template;
   return template.replace(/\{(\w+)\}/g, (match, name: string) =>
     name in params ? String(params[name]) : match,

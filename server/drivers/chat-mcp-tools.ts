@@ -17,6 +17,7 @@ import { fitToolList } from "../mcp-tool-schema.ts";
 import type { ToolSchemaProfile } from "../tool-schema-profile.ts";
 import { allowsTool, canUseMcpServer, parseToolScope, type ToolScope } from "../../shared/tool-scope.ts";
 import { OWN_APPS_SERVER } from "../../shared/own-apps.ts";
+import { rebrandAgentText } from "../brand.ts";
 
 export interface ChatToolDefinition {
   type: "function";
@@ -420,7 +421,7 @@ export async function mountChatTools(integrations: SendTurnInput["integrations"]
         }
         if (result.structuredContent !== undefined) parts.push(JSON.stringify(result.structuredContent));
         if (unsupported) parts.unshift(`[${unsupported} unsupported MCP content item(s) omitted. The operation may have taken effect, but its full result cannot be represented; inspect its state before retrying.]`);
-        return { text: boundedText(parts.join("\n") || (images.length ? "Screenshot captured." : "(empty result)")), ok: result.isError !== true && unsupported === 0,
+        return { text: rebrandAgentText(boundedText(parts.join("\n") || (images.length ? "Screenshot captured." : "(empty result)"))), ok: result.isError !== true && unsupported === 0,
           ...(images.length ? { images } : {}) };
       } catch (error) {
         await close();

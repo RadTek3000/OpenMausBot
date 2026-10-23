@@ -1,4 +1,4 @@
-// The welcome's Cloud beat: MausBot Cloud offered to a new desktop where it can be bought now. Start opens the buy sheet
+// The welcome's Cloud beat: HITEK Cloud offered to a new desktop where it can be bought now. Start opens the buy sheet
 // over the welcome (which goes on when the sheet closes); Not now goes on at once.
 import { useEffect, useState } from "react";
 import { Check } from "lucide-react";

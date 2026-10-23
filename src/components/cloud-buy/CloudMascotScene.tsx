@@ -1,4 +1,4 @@
-// MausBot Cloud's night shift: three Maus bots work on a cloud under the moon while this computer sleeps on its hill.
+// HITEK Cloud's night shift: hosted agents work while this computer sleeps on its hill.
 import { memo, useEffect, useId, useRef, useState, useSyncExternalStore, type CSSProperties, type RefObject } from "react";
 import { MausAvatar } from "@/components/Avatar";
 import { t } from "@/lib/i18n";

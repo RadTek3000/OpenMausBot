@@ -639,15 +639,7 @@ export function VpsConnection() {
       </div>
       <div className="mb-1.5 text-[12px] leading-relaxed text-ink-secondary">
         {t("keys.vps.descBefore")}
-        <a
-          href="https://github.com/milind-soni/OpenMausBot/blob/main/docs/byo-vps.md"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-accent hover:underline"
-        >
-          {t("keys.vps.descLink")}
-        </a>
-        {t("keys.vps.descAfter")}
+        {t("keys.vps.descLink")} {t("keys.vps.descAfter")}
       </div>
       <div className="flex gap-2">
         <input

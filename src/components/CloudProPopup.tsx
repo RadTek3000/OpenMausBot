@@ -17,7 +17,7 @@ export type CloudProPopupAction = "shown" | "upgrade" | "manage" | "see_plans" |
 export type CloudProPopupPage = "local" | "my_cloud";
 
 export interface CloudProPopupView {
-  /** Never a checkout, never the browser: the Add a Cloud dialog, or Settings → MausBot Cloud on the page it shows on. */
+  /** Never a checkout, never the browser: the Add a Cloud dialog or the hosted-workspace settings page. */
   primary: { label: string; via: "add-cloud" | "settings" };
   /** Compare plans, for someone who can buy: the dialog lists every plan. A payer has nothing to compare there yet. */
   seePlans: boolean;

@@ -4,9 +4,7 @@ artifactName: HITEK-Agent-Desk-${version}-${arch}.${ext}
 
 protocols:
   - name: HITEK Agent Desk package install
-    # Keep the upstream scheme registered so existing dealer links continue to work
-    # while new HITEK links can use the branded scheme.
-    schemes: [hitekagent, openmausbot]
+    schemes: [hitekagent]
 
 # In-app auto-update reads latest-mac.yml + the .zip (macOS) or latest.yml +
 # the NSIS .exe (Windows) from the PUBLIC releases in this source repo.
@@ -133,10 +131,10 @@ mac:
     - from: dist-native/duckdb/darwin-${arch}/node_modules
       to: duckdb/node_modules
   extendInfo:
-    NSMicrophoneUsageDescription: OpenMausBot uses the microphone for voice dictation into the composer.
-    NSSpeechRecognitionUsageDescription: OpenMausBot transcribes your voice on-device to type messages for you.
-    NSAccessibilityUsageDescription: OpenMausBot uses Accessibility when you let a bot control this Mac.
-    NSScreenCaptureUsageDescription: OpenMausBot uses Screen Recording so bots can see this Mac before acting.
+    NSMicrophoneUsageDescription: HITEK Agent Desk uses the microphone for voice dictation into the composer.
+    NSSpeechRecognitionUsageDescription: HITEK Agent Desk transcribes your voice on-device to type messages for you.
+    NSAccessibilityUsageDescription: HITEK Agent Desk uses Accessibility when you let an agent control this Mac.
+    NSScreenCaptureUsageDescription: HITEK Agent Desk uses Screen Recording so agents can see this Mac before acting.
   # Notarization runs manually after the build (notarytool + staple),
   # mirroring the BlueyLite ship_release.sh flow.
   notarize: false
@@ -183,9 +181,7 @@ nsis:
   oneClick: true
   perMachine: false
   shortcutName: HITEK Agent Desk
-  # Versioned, like the .dmg. The README's /latest/download/ button needs a
-  # STABLE filename, so ship a second copy named OpenMausBot-setup.exe on the
-  # release — the same trick as OpenMausBot.dmg beside OpenMausBot-${version}.dmg.
+  # Versioned, like the .dmg. Keep the artifact name stable enough for release links.
   artifactName: HITEK-Agent-Desk-${version}-setup.${ext}
 
 linux:

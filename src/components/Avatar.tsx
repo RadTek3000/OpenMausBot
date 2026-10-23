@@ -15,6 +15,7 @@ import { isHalloweenBody, type BotBodyId } from "../../shared/bot-body";
 import { useHalloweenDressed, wornBody } from "@/lib/halloween-dress";
 import { CarvedAvatar } from "./CarvedAvatar";
 import { steelBodyImage } from "@/lib/steel-body";
+import { brand } from "@/lib/brand";
 
 export const EYE_SCALE = 1.12;
 export const MOUTH_WEIGHT = 11;
@@ -97,6 +98,15 @@ export type MausAvatarProps = {
 
 function MausAvatarComponent(props: MausAvatarProps, ref: React.Ref<MausAvatarHandle>) {
   const { bodyId, color, size, state, motion, motionKey, gaze, trackPointer, animated, label } = props;
+  const mark = brand().favicon;
+  if (mark) {
+    const dimension = size ?? 44;
+    return (
+      <span className="inline-flex shrink-0 overflow-hidden rounded-full" style={{ width: dimension, height: dimension }} title={label}>
+        <img src={mark} alt={label ?? ""} width={dimension} height={dimension} draggable={false} className="block size-full object-cover" />
+      </span>
+    );
+  }
   if (isHalloweenBody(bodyId)) {
     return (
       <CarvedAvatar
@@ -212,6 +222,7 @@ export type BotAvatarProps = Omit<MausAvatarProps, "color" | "gradient"> & {
   readable?: boolean;
   bot: {
     name?: string;
+    defaultBot?: object | null;
     color: MausColor;
     avatarUrl?: string | null;
     avatarCrop?: BotAvatarCrop;
@@ -239,14 +250,17 @@ export function resolveBotAvatarOutcome(params: {
 
 export function BotAvatar({ bot, size = 44, label, readable = false, ...mascotProps }: BotAvatarProps) {
   const profile = botAvatarProfile(bot);
+  const brandedUrl = bot.defaultBot && !profile.avatarUrl ? brand().favicon : undefined;
+  const avatarUrl = profile.avatarUrl ?? brandedUrl;
+  const avatarCrop = brandedUrl ? "circle" : profile.avatarCrop;
   const dressed = useHalloweenDressed();
   const [imageFailed, setImageFailed] = useState(false);
 
-  useEffect(() => setImageFailed(false), [profile.avatarUrl]);
+  useEffect(() => setImageFailed(false), [avatarUrl]);
 
   const outcome = resolveBotAvatarOutcome({
-    avatarCrop: profile.avatarCrop,
-    hasUrl: Boolean(profile.avatarUrl),
+    avatarCrop,
+    hasUrl: Boolean(avatarUrl),
     imageFailed,
   });
 
@@ -263,7 +277,7 @@ export function BotAvatar({ bot, size = 44, label, readable = false, ...mascotPr
     );
   }
 
-  const radius = avatarCropRadius(profile.avatarCrop);
+  const radius = avatarCropRadius(avatarCrop);
   const zoom = clampAvatarZoom(bot.avatarZoom ?? 1);
   const focusX = clampAvatarFocus(bot.avatarFocusX ?? 0.5);
   const focusY = clampAvatarFocus(bot.avatarFocusY ?? 0.5);
@@ -274,7 +288,7 @@ export function BotAvatar({ bot, size = 44, label, readable = false, ...mascotPr
       style={{ width: size, height: size, borderRadius: radius }}
     >
       <img
-        src={profile.avatarUrl}
+        src={avatarUrl}
         alt={label ?? (bot.name ? `${bot.name} avatar` : "Bot avatar")}
         width={size}
         height={size}

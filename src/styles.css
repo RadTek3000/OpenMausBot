@@ -733,7 +733,7 @@
 }
 
 /* ── Meadow ───────────────────────────────────────────────────────────────
-   The MausBot brand look: a white page, a sidebar washed in the faintest
+   The HITEK Agent Desk brand look: a white page, a sidebar washed in the faintest
    green, mint for the selected row and a calm green accent. Like Daylight,
    your own bubble is the one dark surface (green-black), so it gets the same
    @scope treatment further down. The brand green #1f8a52 carries white at
@@ -849,6 +849,58 @@
   --identity-coral: #d1381f;
   --identity-silver: #6a727c;
   --identity-chrome: #667284;
+}
+
+[data-skin="hitek"] {
+  --code-color-scheme: dark;
+  --color-app: #050505;
+  --color-panel: #0d0d0d;
+  --color-raised: #1d1d1d;
+  --color-raised-hover: #292929;
+  --color-composer: #171717;
+  --color-composer-ring: #2e2e2e;
+  --color-card: #141414;
+  --color-menu: #171717;
+  --color-inset: #090909;
+  --color-control: #202020;
+  --color-hairline: #303030;
+
+  --color-ink: #f7f7f7;
+  --color-ink-secondary: #c8c8c8;
+  --color-ink-tertiary: #a3a3a3;
+
+  --color-accent: #e51717;
+  --color-accent-border: #ff3b30;
+  --color-accent-text: #ff625c;
+  --color-focus: #ff3b30;
+  --color-accent-ink: #ffffff;
+  --color-bubble-user: #353535;
+  --color-bubble-user-ink: #ffffff;
+
+  --color-success: #45d483;
+  --color-danger: #ff6874;
+  --color-danger-ink: #ffffff;
+  --color-success-ink: #071b10;
+  --color-warning: #f2aa52;
+  --color-scrollbar: #3a3a3a;
+  --color-maus-line: #f7f7f7;
+
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Segoe UI", system-ui, sans-serif;
+  --radius-lg: 6px;
+  --radius-xl: 10px;
+  --identity-green: #45d483;
+  --identity-blue: #69a6ff;
+  --identity-red: #ff625c;
+  --identity-orange: #f2aa52;
+  --identity-purple: #b28aff;
+  --identity-cyan: #5bd7e8;
+  --identity-pink: #ff86bd;
+  --identity-yellow: #f4d35e;
+  --identity-teal: #54d9bc;
+  --identity-coral: #ff8b72;
+  --identity-silver: #b9b9b9;
+  --identity-chrome: #d1d1d1;
 }
 
 [data-skin="halloween"] {
@@ -1507,10 +1559,10 @@ body {
    moves and resizes them instead of cross-fading two cards. Everything
    else cross-fades under the new beat, which rises in on its own. */
 .welcome-card { view-transition-name: welcome-card; }
-.welcome-maus { view-transition-name: welcome-maus; }
+.welcome-agent { view-transition-name: welcome-agent; }
 .welcome-title { view-transition-name: welcome-title; }
 ::view-transition-group(welcome-card),
-::view-transition-group(welcome-maus),
+::view-transition-group(welcome-agent),
 ::view-transition-group(welcome-title) {
   animation-duration: 0.42s;
   animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);

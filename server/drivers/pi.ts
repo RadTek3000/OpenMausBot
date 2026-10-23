@@ -19,6 +19,7 @@ import {
 import type { PromptSplitReceipt } from "./prompt-split.ts";
 import { SPAWNED_PROXIES } from "../proxy-paths.ts";
 import { commandSummary, toolDetailPreview } from "../tool-summary.ts";
+import { rebrandAgentText } from "../brand.ts";
 
 import type {
   DriverCreateInput,
@@ -586,6 +587,12 @@ export const PiDriver: ProviderDriver<PiConfig> = {
 
     const sendTurn = async (turn: SendTurnInput) => {
       if (startupModelRefresh) await startupModelRefresh;
+      turn = {
+        ...turn,
+        ...(turn.system !== undefined ? { system: rebrandAgentText(turn.system) } : {}),
+        ...(turn.systemStable !== undefined ? { systemStable: rebrandAgentText(turn.systemStable) } : {}),
+        ...(turn.systemVolatile !== undefined ? { systemVolatile: rebrandAgentText(turn.systemVolatile) } : {}),
+      };
       const { threadId } = turn;
       const selection = parseToolScope(turn.toolScope);
       if (!selection.ok) throw new Error(selection.error);

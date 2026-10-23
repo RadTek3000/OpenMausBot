@@ -1,6 +1,7 @@
 // Google answers 403 ACCESS_TOKEN_SCOPE_INSUFFICIENT when a grant lacks a scope (gmail.settings.basic for a filter), and
 // Composio's default auth config never asks for it, so reconnecting cannot help: the fix is the person's own auth config.
 // Only failed calls count: Composio's successful answers quote the same wording (COMPOSIO_SEARCH_TOOLS known_pitfalls).
+import { rebrandAgentText } from "./brand.ts";
 
 const SCOPE_ERROR = /ACCESS_TOKEN_SCOPE_INSUFFICIENT|insufficient authentication scopes|insufficientPermissions/i;
 
@@ -23,11 +24,11 @@ export function scopeHint(slugs: readonly string[]): string {
   const app = slug ? appName(slug) : null;
   const scope = slug ? requiredScope(slug) : null;
   const permission = scope ? `the ${scope} permission` : "the permission this action needs";
-  return `OpenMausBot note: ${app ?? "The app"} refused this because the connected account has not granted ${permission}. ` +
+  return rebrandAgentText(`OpenMausBot note: ${app ?? "The app"} refused this because the connected account has not granted ${permission}. ` +
     `Reconnecting will not add it: the default Composio connection never asks for it. ` +
     `To allow it, the person creates their own ${app ? `${app} ` : ""}auth config in their Composio project that includes ${permission}, ` +
     `then reconnects ${app ?? "the app"} under Connected apps; OpenMausBot uses that config automatically. ` +
-    `Tell the person this. Do not retry this call.`;
+    `Tell the person this. Do not retry this call.`);
 }
 
 type ToolResultFrame = { result?: { content?: unknown; isError?: unknown } };

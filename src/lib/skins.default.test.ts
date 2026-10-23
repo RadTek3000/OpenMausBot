@@ -10,7 +10,7 @@ async function boot() {
   const [{ settleAdvancedModeDefault, readAdvancedMode }, skins] = await Promise.all([import("./interface-mode"), import("./skins")]);
   settleAdvancedModeDefault();
   skins.applySkin(skins.readSkin());
-  return { skin: document.documentElement.dataset.skin, advanced: readAdvancedMode(), stored: values.get("omb-skin") };
+  return { skin: document.documentElement.dataset.skin, advanced: readAdvancedMode(), stored: values.get("hitek-skin") };
 }
 
 beforeEach(() => {
@@ -26,38 +26,38 @@ beforeEach(() => {
 afterEach(() => { vi.unstubAllGlobals(); });
 
 describe("default skin", () => {
-  it("opens a fresh install in Meadow, in Simple mode, and keeps it on the next launch", async () => {
-    expect(await boot()).toEqual({ skin: "meadow", advanced: false, stored: "meadow" });
+  it("opens in the HITEK skin and keeps it on the next launch", async () => {
+    expect(await boot()).toEqual({ skin: "hitek", advanced: false, stored: "hitek" });
     values.set("omb-installed", "2026-10-17T00:00:00.000Z");
-    expect(await boot()).toEqual({ skin: "meadow", advanced: false, stored: "meadow" });
+    expect(await boot()).toEqual({ skin: "hitek", advanced: false, stored: "hitek" });
   });
 
-  it("keeps an install that ran before in Midnight when nobody picked a skin", async () => {
+  it("migrates an earlier install to HITEK", async () => {
     values.set("omb-skin", "midnight");
-    expect(await boot()).toMatchObject({ skin: "midnight", stored: "midnight" });
+    expect(await boot()).toMatchObject({ skin: "hitek", stored: "hitek" });
   });
 
-  it("keeps Midnight for an earlier install whose saved skin is missing or no longer exists", async () => {
+  it("migrates an earlier install whose saved skin is missing or no longer exists", async () => {
     values.set("omb-installed", "2026-01-01T00:00:00.000Z");
-    expect(await boot()).toEqual({ skin: "midnight", advanced: true, stored: "midnight" });
+    expect(await boot()).toEqual({ skin: "hitek", advanced: true, stored: "hitek" });
     values.set("omb-skin", "retired-skin");
-    expect(await boot()).toMatchObject({ skin: "midnight", stored: "midnight" });
+    expect(await boot()).toMatchObject({ skin: "hitek", stored: "hitek" });
   });
 
-  it("always honours a skin someone chose", async () => {
+  it("does not revive an upstream skin choice", async () => {
     values.set("omb-skin", "lagoon");
-    expect(await boot()).toMatchObject({ skin: "lagoon" });
+    expect(await boot()).toMatchObject({ skin: "hitek" });
     values.clear();
     values.set("omb-skin", "midnight");
     values.set("omb-advanced-mode", "0");
-    expect(await boot()).toMatchObject({ skin: "midnight", advanced: false });
+    expect(await boot()).toMatchObject({ skin: "hitek", advanced: false });
   });
 
-  it("shows Meadow as the selected skin in Appearance on a fresh install", async () => {
+  it("shows HITEK as the selected skin in Appearance", async () => {
     await boot();
     const { SkinPicker } = await import("@/components/SkinPicker");
     const markup = renderToStaticMarkup(createElement(SkinPicker));
     const pressed = [...markup.matchAll(/aria-pressed="true"[\s\S]*?<div class="text-\[13px\] font-medium text-ink">([^<]+)</g)].map(([, name]) => name);
-    expect(pressed).toEqual(["Meadow"]);
+    expect(pressed).toEqual(["HITEK"]);
   });
 });

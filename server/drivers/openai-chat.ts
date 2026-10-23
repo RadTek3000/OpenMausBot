@@ -24,6 +24,7 @@ import { plainFailureMessage } from "./engine-errors.ts";
 import { toolSchemaProfileFor } from "../tool-schema-profile.ts";
 import { classifyContinuable, writeTurnHandoff } from "../turn-continuation.ts";
 import { KEY_REJECTED_REASON, keyRejected, noteKeyAccepted, noteKeyRejected, rejectsKey } from "../key-rejections.ts";
+import { rebrandAgentText } from "../brand.ts";
 
 export interface OpenAIChatMessage {
   role: "system" | "user" | "assistant" | "tool";
@@ -507,10 +508,10 @@ export function createOpenAIChatRuntime<Config>(options: RuntimeOptions<Config>)
     if (delivered.size > MAX_DELIVERED_THREADS) delivered.delete(delivered.keys().next().value!);
     const system = halves.stable ?? turn.system;
     return [
-      ...(system ? [{ role: "system" as const, content: system }] : []),
+      ...(system ? [{ role: "system" as const, content: rebrandAgentText(system) }] : []),
       ...transcript.map((message, index) => ({
         role: message.role,
-        content: replay.content.get(index) ?? message.text,
+        content: rebrandAgentText(replay.content.get(index) ?? message.text),
       })),
       { role: "user", content },
     ];
@@ -702,7 +703,7 @@ export function createOpenAIChatRuntime<Config>(options: RuntimeOptions<Config>)
               // A person's "no" is never answered with another attempt; a failure may first get the configured corrective rounds.
               if (!denials.length && correctiveRounds < (turn.toolErrorCorrectiveRounds ?? 0)) {
                 correctiveRounds += 1;
-                messages.push({ role: "user", content: CORRECTIVE_ROUND });
+                messages.push({ role: "user", content: rebrandAgentText(CORRECTIVE_ROUND) });
                 continue;
               }
               stopReason = "tool_error";
@@ -719,7 +720,7 @@ export function createOpenAIChatRuntime<Config>(options: RuntimeOptions<Config>)
               }
               nudges += 1;
               callsAtNudge = seenCalls.size;
-              messages.push({ role: "assistant", content: completion.text }, { role: "user", content: NUDGE_ANNOUNCED_ACTION });
+              messages.push({ role: "assistant", content: completion.text }, { role: "user", content: rebrandAgentText(NUDGE_ANNOUNCED_ACTION) });
               continue;
             }
             ok = true;

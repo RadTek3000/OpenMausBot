@@ -1,5 +1,6 @@
 import { X } from "lucide-react";
 
+import { assistantName } from "@/lib/brand";
 import { t } from "@/lib/i18n";
 import type { LocaleKey } from "@/locales";
 import { useStore, type Message } from "@/state/store";
@@ -9,12 +10,12 @@ export const HELPER_ASK_KEYS: readonly LocaleKey[] = [
   "helperIntro.ask.overview", "helperIntro.ask.inbox", "helperIntro.ask.routine", "helperIntro.ask.howto",
 ];
 
-/** MausBot's first message, in the viewer's language. Its asks go once one is tapped, it is dismissed, or the person
+/** The HITEK Agent's first message, in the viewer's language. Its asks go once one is tapped, it is dismissed, or the person
  * writes anything after it (`asksDone`). */
 export function HelperIntro({ botId, threadId, message, asksDone }: { botId: string; threadId: string; message: Message; asksDone: boolean }) {
   const { state, dispatch } = useStore();
   const bot = state.bots.find((candidate) => candidate.id === botId);
-  const name = bot?.name ?? "MausBot";
+  const name = bot?.name ?? assistantName();
   const team = bot?.defaultBot?.person ? state.config?.team?.name : undefined;
   const ask = (key: LocaleKey) => dispatch({ type: "answerCard", botId, threadId, messageId: message.id, answer: t(key) });
   return (

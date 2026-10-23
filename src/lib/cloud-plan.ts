@@ -2,6 +2,7 @@ import type { CloudAccountState, CloudPlanSnapshot } from "../../electron/cloud-
 import type { CloudCredit, CloudOffer, CloudOfferPlan, CloudPlanAllowances, CloudSetupStep, CloudTrial, CloudTrialState } from "../../electron/cloud-home.mjs";
 import { planTeam, teamPlan } from "../../electron/cloud-team-plan.mjs";
 import { activeLocale, t } from "@/lib/i18n";
+import { cloudName } from "@/lib/brand";
 import type { LocaleKey } from "@/locales";
 
 const PLAN_LABEL: Record<string, string> = { starter: "Starter", personal: "Personal", pro: "Pro", max: "Max" };
@@ -62,8 +63,8 @@ export function xResearchAction(view: CloudPlanView | null): "connecting" | "sig
 export function cloudPlanLine(view: CloudPlanView): string | null {
   switch (view.kind) {
     case "paid": return t(view.trial ? "cloudAccount.trialPlan" : "cloudAccount.pro", { plan: view.label });
-    case "attention": return t("cloudAccount.inactive", { plan: view.label ?? "MausBot Cloud" });
-    case "purchase": return t("cloudAccount.purchaseReceived", { plan: view.label ?? "MausBot Cloud" });
+    case "attention": return t("cloudAccount.inactive", { plan: view.label ?? cloudName() });
+    case "purchase": return t("cloudAccount.purchaseReceived", { plan: view.label ?? cloudName() });
     case "unverified": return view.label ? t("cloudAccount.lastPlan", { plan: view.label }) : null;
     case "reauth": return view.label ? t("cloudAccount.planName", { plan: view.label }) : null;
     case "free": return t("cloudAccount.free");

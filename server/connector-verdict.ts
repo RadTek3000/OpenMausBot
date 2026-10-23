@@ -2,6 +2,7 @@
 // where the loopback token names the bot. Unrecognized argument shapes are denied: "this bot may call exactly these tools"
 // must hold even against a model that garbles the protocol.
 import { CONNECTOR_TOOL_NAME_PATTERN, type ConnectorToolGrant } from "../shared/wire.ts";
+import { rebrandAgentText } from "./brand.ts";
 
 /** The only Composio meta-tool whose arguments name target tools. */
 export const COMPOSIO_MULTI_EXECUTE_TOOL = "COMPOSIO_MULTI_EXECUTE_TOOL";
@@ -129,26 +130,26 @@ export function evaluateConnectorTools(
 export function connectorRefusalText(denials: ConnectorDenial[]): string {
   const named = denials.map((denial) => '"' + denial.tool + '"').join(", ");
   const one = denials.length === 1;
-  return [
+  return rebrandAgentText([
     named + " " + (one ? "is" : "are") + " not granted to this bot.",
     "This call was not performed.",
     "Ask the person to grant " + (one ? "it" : "these tools") + " in OpenMausBot if they want " + (one ? "it" : "them") + " run.",
-  ].join(" ");
+  ].join(" "));
 }
 
 export function connectorUnrecognizedText(invoked: string, reason: string): string {
-  return [
+  return rebrandAgentText([
     "A " + invoked + " call arrived in a shape OpenMausBot could not read (" + reason + "), so it was not performed.",
     invoked === COMPOSIO_MULTI_EXECUTE_TOOL
       ? "Send it again with the tools to execute as tools: [{ tool_slug, arguments }]."
       : "Send a well-formed call that names the tools to execute.",
     "Ask the person to grant any tool this bot needs.",
-  ].join(" ");
+  ].join(" "));
 }
 
 export function connectorScopeRefusalText(call: ConnectorCall, reason: "app" | "write", bot: string, app: string, tool: string): string {
   if (call.kind === "unrecognized") return connectorUnrecognizedText(call.invoked, call.reason);
-  return reason === "app"
+  return rebrandAgentText(reason === "app"
     ? `OpenMausBot did not run this: ${bot} has not been given access to ${app}. Ask the user to allow it under the bot's Access settings, and do not retry.`
-    : `OpenMausBot did not run this: ${app} is read-only for ${bot}, and ${tool} would write to it. Ask the user before trying again.`;
+    : `OpenMausBot did not run this: ${app} is read-only for ${bot}, and ${tool} would write to it. Ask the user before trying again.`);
 }

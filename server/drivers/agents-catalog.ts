@@ -4,6 +4,7 @@ import { OPTIONS_CARD_LIMITS, WATCHER_OPTIONS_CARD_BOT_ID } from "../../shared/o
 import { agentToolAnnotations } from "../agent-tool-policy.ts";
 import { CHAT_CARD_TOOL_DEFINITIONS } from "./agents-chat-card-tools.ts";
 import { RESEARCH_TOOL_DEFINITIONS, RESEARCH_TOOL_NAMES } from "./agents-research-tools.ts";
+import { rebrandAgentText } from "../brand.ts";
 
 /** Which tools a turn is shown. Presentation only: the server still authenticates and scopes every call. */
 export interface CatalogProfile {
@@ -959,11 +960,25 @@ const CLOUD_HOME_SURFACE = {
 
 export function availableTools(profile: CatalogProfile) {
   const tools = catalogTools(profile);
-  return profile.cloudHome
+  const visible = profile.cloudHome
     ? tools.filter(tool => !LOCAL_VM_TOOL_NAMES.has(tool.name)).map(tool => tool.name === "select_computer"
       ? { ...tool, inputSchema: { ...tool.inputSchema, properties: { surface: CLOUD_HOME_SURFACE } } }
       : tool)
     : tools;
+  return visible.map(tool => ({
+    ...tool,
+    description: rebrandAgentText(tool.description),
+    inputSchema: rebrandCatalogValue(tool.inputSchema) as typeof tool.inputSchema,
+  }));
+}
+
+function rebrandCatalogValue(value: unknown): unknown {
+  if (typeof value === "string") return rebrandAgentText(value);
+  if (Array.isArray(value)) return value.map(rebrandCatalogValue);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(Object.entries(value).map(([key, child]) => [key, rebrandCatalogValue(child)]));
+  }
+  return value;
 }
 
 function catalogTools(profile: CatalogProfile) {

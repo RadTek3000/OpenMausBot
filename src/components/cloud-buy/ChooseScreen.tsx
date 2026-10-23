@@ -1,4 +1,4 @@
-// Screen 1: what MausBot Cloud is, then the plans the Admin sells now as cards, each with its own button, and the money in one line.
+// Screen 1: what hosted HITEK Cloud is, then the plans the Admin sells now as cards, each with its own button, and the money in one line.
 import { Check, CloudUpload, Lock, Monitor, Moon, Smartphone, type LucideIcon } from "lucide-react";
 import type { CloudOffer, CloudOfferPlan } from "../../../electron/cloud-home.mjs";
 import { cn } from "@/lib/cn";

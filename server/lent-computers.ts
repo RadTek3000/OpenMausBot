@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { useMyComputerLink } from "../shared/use-my-computer.ts";
 import { writeFileAtomic } from "./atomic.ts";
+import { productName } from "./brand.ts";
 
 export const LENT_PLATFORMS = ["darwin", "win32", "linux"] as const;
 export type LentPlatform = typeof LENT_PLATFORMS[number];
@@ -103,8 +104,8 @@ export class LentComputers {
   }
 }
 
-/** How the person lends apps and screen: one link, pressed in OpenMausBot on the lent computer, which asks them once. */
-export const lendScreenSteps = (device: "PC" | "Mac" | "computer") => `To lend them, give the person ${useMyComputerLink(device)} to press in OpenMausBot `
+/** How the person lends apps and screen: one link, pressed in the app on the lent computer, which asks them once. */
+export const lendScreenSteps = (device: "PC" | "Mac" | "computer") => `To lend them, give the person ${useMyComputerLink(device)} to press in ${productName()} `
   + `on that ${device}: it asks them once and turns on its apps and screen.`;
 
 const dateText = (at: number) => new Date(at).toISOString().slice(0, 16).replace("T", " ") + " UTC";
@@ -120,7 +121,7 @@ export function awayNotice(known: LentComputer[], online: ReadonlySet<string>): 
   const latest = away[0]!;
   const device = deviceWord(latest.platform);
   const say = latest.stoppedAt === null
-    ? `Their ${device} ${latest.name} is shared with the Cloud but offline (last online ${dateText(latest.lastSeenAt)}): OpenMausBot on it is closed, or the ${device} is asleep or off. Ask them to open OpenMausBot on that ${device}; it reconnects by itself.`
-    : `Their ${device} ${latest.name} is no longer shared with the Cloud: sharing was turned off on it. To share it again, they press ${useMyComputerLink(device)} in OpenMausBot on that ${device}.`;
+    ? `Their ${device} ${latest.name} is shared with the Cloud but offline (last online ${dateText(latest.lastSeenAt)}): ${productName()} on it is closed, or the ${device} is asleep or off. Ask them to open ${productName()} on that ${device}; it reconnects by itself.`
+    : `Their ${device} ${latest.name} is no longer shared with the Cloud: sharing was turned off on it. To share it again, they press ${useMyComputerLink(device)} in ${productName()} on that ${device}.`;
   return { offline, say };
 }

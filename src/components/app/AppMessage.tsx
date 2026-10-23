@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useStore, type Message } from "@/state/store";
+import { rebrandDisplayedText } from "@/lib/brand";
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/cn";
 import type { AppDocument, AppPayload } from "../../../shared/app";
@@ -56,7 +57,7 @@ export function AppMessage({ botId, botName, threadId, message, pool }: {
   const payload = message.app;
   if (!isAppPayload(payload) || !threadId) {
     return message.text
-      ? <div className="chat-text w-fit max-w-[min(42rem,78%)] rounded-2xl bg-card px-4 py-2.5 text-[15px] leading-relaxed whitespace-pre-wrap text-ink">{message.text}</div>
+      ? <div className="chat-text w-fit max-w-[min(42rem,78%)] rounded-2xl bg-card px-4 py-2.5 text-[15px] leading-relaxed whitespace-pre-wrap text-ink">{rebrandDisplayedText(message.text)}</div>
       : null;
   }
   return <AppRow botId={botId} botName={botName} threadId={threadId} message={message} payload={payload} pool={pool} />;

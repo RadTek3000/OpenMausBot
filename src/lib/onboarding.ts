@@ -83,7 +83,7 @@ export interface BeatOptions {
   aiReady?: boolean;
   /** This computer has skills or MCP servers from another AI tool to bring in. */
   setupImport?: boolean;
-  /** MausBot Cloud can be bought from this desktop now (cloudBeatWanted); the first bot stays the last beat. */
+  /** HITEK Cloud can be bought from this desktop now (cloudBeatWanted); the first bot stays the last beat. */
   cloud?: boolean;
 }
 
@@ -104,7 +104,7 @@ export function onboardingCloudOffered(record: OnboardingStatus | undefined): bo
   return hintSeen(record, ONBOARDING_CLOUD_HINT);
 }
 
-/** Where the welcome may offer MausBot Cloud at all: this computer's own page with the Cloud bridge, not a branded
+/** Where the welcome may offer HITEK Cloud at all: this computer's own page with the Cloud bridge, not a branded
  * build, not a hosted or remote viewer. */
 export function cloudBeatPossible(input: { bridge: boolean; branded: boolean; hosted: boolean; remote: boolean }): boolean {
   return input.bridge && !input.branded && !input.hosted && !input.remote;
@@ -162,7 +162,8 @@ export function flowDotsShown(beat: BeatId): boolean {
 }
 
 
-export const DEFAULT_ADMIN_ORIGIN = "https://admin.openmausbot.com";
+export const DEFAULT_ADMIN_ORIGIN = import.meta.env.VITE_HITEK_PORTAL_ORIGIN?.trim()
+  || (typeof window !== "undefined" ? window.location.origin : "");
 
 export function organisationSignIn<Bridge>(
   ogb: { organization?: Bridge; remoteClient?: { active?: boolean } } | undefined,

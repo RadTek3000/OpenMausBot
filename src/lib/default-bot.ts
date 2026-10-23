@@ -27,7 +27,7 @@ export function useViewerEmail(): string | null | undefined {
   }, () => email, () => undefined);
 }
 
-/** Someone else's MausBot on a Team Cloud: an Admin may open it, but it is never in their sidebar. */
+/** Someone else's HITEK Agent on a Team Cloud: an Admin may open it, but it is never in their sidebar. */
 export function someoneElsesDefaultBot(bot: DefaultBotFields, viewer: string | null | undefined): boolean {
   const person = defaultBotPerson(bot);
   return Boolean(bot.defaultBot && person && person !== (viewer ?? ""));
@@ -43,7 +43,7 @@ export function myDefaultBot<T extends DefaultBotFields>(bots: readonly T[], vie
 
 export type SetupStep = "ai" | "bots" | "apps" | "phone" | "cloud";
 
-/** What MausBot's intro offers to set up, each optional: only what is still to do, and on a place with bots of the
+/** What the HITEK Agent's intro offers to set up, each optional: only what is still to do, and on a place with bots of the
  * person's own only an AI, which nothing works without. On a Team Cloud the team's admins set those up. */
 export function setupSteps(input: { aiReady: boolean; ownBots: number; onCloud: boolean; team: boolean; remote: boolean }): SetupStep[] {
   if (input.team) return [];
@@ -58,7 +58,7 @@ export function setupSteps(input: { aiReady: boolean; ownBots: number; onCloud: 
 let welcoming: string | null = null;
 const welcomingListeners = new Set<() => void>();
 
-/** The MausBot whose first-launch welcome is open: kept out of the sidebar until Add lands it there. */
+/** The HITEK Agent whose first-launch welcome is open: kept out of the sidebar until Add lands it there. */
 export function setWelcomingBot(id: string | null): void {
   if (welcoming === id) return;
   welcoming = id;

@@ -7,7 +7,7 @@ export const CLOUD_TRIAL_NOTICE = "cloud-trial-notice";
 export const CLOUD_NOTICE = "cloud-notice";
 export const STAR_NOTICE = "github-star-dismissed";
 export const PRODUCT_HUNT_NOTICE = "product-hunt-launch-2026-10";
-export const PRODUCT_HUNT_URL = "https://www.producthunt.com/products/mausbot";
+export const PRODUCT_HUNT_URL = "https://hitekfilms.com";
 export const PRODUCT_HUNT_UNTIL = Date.UTC(2026, 10, 1);
 
 export type NoticeId = typeof CLOUD_PRO_UPDATE_NOTICE | typeof UPDATES_CONSENT_NOTICE | typeof PRODUCT_HUNT_NOTICE | typeof CLOUD_INTRO | typeof CLOUD_TRIAL_NOTICE | typeof CLOUD_NOTICE | typeof STAR_NOTICE;

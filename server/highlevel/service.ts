@@ -5,6 +5,7 @@ import { HIGHLEVEL_API_ENV, HighLevelClient, HighLevelError, lookupLocation } fr
 import { createHighLevelRelay, highlevelRelayUrl, type HighLevelRelay } from "./relay.ts";
 import { HighLevelSignIn } from "./sign-in.ts";
 import { HighLevelStore, type HighLevelConnection } from "./store.ts";
+import { rebrandAgentText } from "../brand.ts";
 
 export interface HighLevelServiceOptions {
   dataDir: string;
@@ -70,7 +71,7 @@ export function createHighLevelService(options: HighLevelServiceOptions): HighLe
     connected: () => store.get()?.state === "signed-in",
     status,
     async startSignIn() {
-      if (!signIn) throw new HighLevelError("HighLevel sign-in is not available: no OpenMausBot relay is configured. Use a Private Integration token instead.", { status: 503 });
+      if (!signIn) throw new HighLevelError(rebrandAgentText("HighLevel sign-in is not available: no OpenMausBot relay is configured. Use a Private Integration token instead."), { status: 503 });
       return signIn.start();
     },
     signInStatus: (flowId) => signIn?.status(flowId) ?? null,

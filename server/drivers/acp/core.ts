@@ -26,6 +26,7 @@ import {
 import { readSessionReport } from "./session-reports.ts";
 import { acpVariantOption, offeredModels } from "./config-options.ts";
 import { versionFromProbe } from "./version-probe.ts";
+import { rebrandAgentText } from "../../brand.ts";
 
 export function skipSubscriptionAuthForLocalInject(model: string | undefined): boolean {
   return Boolean(decodeInjectId(model));
@@ -368,8 +369,9 @@ export function createAcpDriver(support: AcpSupport): ProviderDriver<AcpConfig> 
   const DRIVER_KIND = support.driverKind;
   const SOURCE = support.nativeSource;
   const decodeConfig = decodeAcpConfig(support.defaultCli);
-  const DENY_TIMEOUT_NOTE =
-    "OpenMausBot: nobody answered this permission request in time. Skip this action and finish what you can without it.";
+  const DENY_TIMEOUT_NOTE = () => rebrandAgentText(
+    "OpenMausBot: nobody answered this permission request in time. Skip this action and finish what you can without it.",
+  );
   const QUESTION_NO_MATCH_NOTE =
     "That answer isn't one of the choices this AI can take, so the question was closed and the turn stopped. Ask again and pick one of the options.";
 
@@ -895,7 +897,7 @@ export function createAcpDriver(support: AcpSupport): ProviderDriver<AcpConfig> 
             return !optionId ? "rejected" : isQuestion ? "answered" : behavior === "allow" ? "allowed-once" : "rejected";
           };
           const timer = setTimeout(() => {
-            emit({ ...base(threadId, current.turnId), type: "runtime.error", message: DENY_TIMEOUT_NOTE });
+            emit({ ...base(threadId, current.turnId), type: "runtime.error", message: DENY_TIMEOUT_NOTE() });
             finish("deny", "timeout");
           }, 15 * 60_000);
           timer.unref?.();
@@ -1076,6 +1078,12 @@ export function createAcpDriver(support: AcpSupport): ProviderDriver<AcpConfig> 
         requireRunning();
         if (startupModelRefresh) await startupModelRefresh;
         requireRunning();
+        turn = {
+          ...turn,
+          ...(turn.system !== undefined ? { system: rebrandAgentText(turn.system) } : {}),
+          ...(turn.systemStable !== undefined ? { systemStable: rebrandAgentText(turn.systemStable) } : {}),
+          ...(turn.systemVolatile !== undefined ? { systemVolatile: rebrandAgentText(turn.systemVolatile) } : {}),
+        };
         const parsedScope = parseToolScope(turn.toolScope);
         if (!parsedScope.ok) throw new Error(parsedScope.error);
         turn = { ...turn, toolScope: parsedScope.scope };

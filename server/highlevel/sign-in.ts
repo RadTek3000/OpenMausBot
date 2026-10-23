@@ -5,6 +5,7 @@ import { randomUUID } from "node:crypto";
 import type { HighLevelSignInPhase } from "../../shared/highlevel.ts";
 import { HighLevelRelayError, type HighLevelRelay, type RelayTokens } from "./relay.ts";
 import type { HighLevelStore } from "./store.ts";
+import { rebrandAgentText } from "../brand.ts";
 
 export const SIGN_IN_POLL_MS = 2_000;
 export const SIGN_IN_MAX_MS = 10 * 60_000;
@@ -70,7 +71,7 @@ export class HighLevelSignIn {
   }
 
   close(): void {
-    this.cancelActive("OpenMausBot stopped.");
+    this.cancelActive(rebrandAgentText("OpenMausBot stopped."));
   }
 
   private cancelActive(message: string): void {

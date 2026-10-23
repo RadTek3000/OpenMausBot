@@ -240,7 +240,7 @@ export function WelcomeFlow({
         </QuietButton>
 
         <div className={cn("flex shrink-0", hello ? "flex-col items-center" : "items-center gap-3")}>
-          <div className="welcome-maus flex shrink-0">
+          <div className="welcome-agent flex shrink-0">
             {logo ? (
               <img src={logo} alt="" width={72} height={72} className="h-[72px] w-[72px] object-contain" />
             ) : (

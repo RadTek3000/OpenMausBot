@@ -44,12 +44,12 @@ describe("skins", () => {
     expect(css).toMatch(/\.chat-md \.shiki\s*\{\s*color-scheme:\s*var\(--code-color-scheme\);\s*\}/);
   });
 
-  it("adds Meadow without moving or replacing the original eight", () => {
+  it("keeps the upstream order and makes HITEK the branded default", () => {
     expect(SKIN_IDS).toContain("meadow");
     expect(SKIN_IDS.slice(0, 8)).toEqual([
       "midnight", "atelier", "foundry", "lagoon", "graphite", "linen", "dusk", "daylight",
     ]);
-    expect(DEFAULT_SKIN).toBe("meadow");
+    expect(DEFAULT_SKIN).toBe("hitek");
     expect(PRIOR_INSTALL_SKIN).toBe("midnight");
   });
 
@@ -64,6 +64,11 @@ describe("skins", () => {
     expect(SKIN_IDS[9]).toBe("pop");
     expect(css).toMatch(/@scope \(\[data-skin="pop"\]\) to \(\[data-skin\]\)\s*\{\s*\.bg-bubble-user\s*\{/);
     expect(css).toMatch(/@scope \(\[data-skin="pop"\]:not\(\[data-skin-preview\]\)\) to \(\[data-skin\]\)/);
+  });
+
+  it("registers HITEK as a dark branded skin", () => {
+    expect(SKINS.find((s) => s.id === "hitek")?.name).toBe("HITEK");
+    expect(css).toMatch(/\[data-skin="hitek"\]\s*\{[\s\S]*--color-accent:\s*#e51717/i);
   });
 
   it("adds Halloween last, dark, with its atmosphere kept off the picker miniature", () => {
