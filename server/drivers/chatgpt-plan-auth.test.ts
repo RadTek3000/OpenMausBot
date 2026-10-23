@@ -129,6 +129,20 @@ describe("official ChatGPT plan OAuth", () => {
       expect(statSync(join(home, "chatgpt-plan", "host-id.json")).mode & 0o777).toBe(0o600);
     }
   });
+  it("renders a branded completion page for the loopback callback", async () => {
+    const controller = create();
+    const flow = await begin(controller);
+    const url = new URL(authorization.searchParams.get("redirect_uri")!);
+    url.search = new URLSearchParams({ state: authorization.searchParams.get("state")!, code: "fixture-code", client_id: "oaiapp_fixture_account_1" }).toString();
+    const response = await fetch(url);
+    const html = await response.text();
+    expect(response.headers.get("content-type")).toContain("text/html");
+    expect(html).toContain("HITEK Agent Desk");
+    expect(html).toContain("Connection complete");
+    expect(html).toContain("Close this tab");
+    expect(html).not.toContain("OpenMausBot");
+    await expect.poll(async () => (await controller.get(flow.flowId!)).phase).toBe("succeeded");
+  });
   it.each(["nonce", "issuer", "audience", "future", "expired", "signature"])("rejects %s identity errors without saving credentials", async (failure) => {
     mode = failure; const controller = create();
     expect(await callback(controller)).toMatchObject({ phase: "failed", message: expect.stringContaining("could not be verified") });

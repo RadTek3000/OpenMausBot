@@ -7,6 +7,7 @@ import type { McpServerSpec } from "./contracts.ts";
 import { discoverMcpAuth, type McpAuthMetadata } from "./mcp-oauth-discovery.ts";
 import { McpOAuthStore, type McpOAuthRecord, type McpOAuthTokens } from "./mcp-oauth-store.ts";
 import type { McpOAuthClientConfig } from "./mcp-registry.ts";
+import { OAUTH_CALLBACK_HEADERS, oauthCallbackProductName, renderOAuthCallbackPage } from "./oauth-callback-page.ts";
 
 export type McpSignInPhase = "waiting" | "succeeded" | "failed" | "cancelled" | "expired";
 
@@ -310,7 +311,7 @@ export class McpOAuthManager {
       const expected = new URL(flow.redirectUri);
       if (!flow.server && expected.host === host?.trim().toLowerCase() && sameSecret(state, flow.state)) match = flow;
     }
-    if (!match) return { status: 400, text: "Invalid sign-in callback. Return to OpenMausBot and try again." };
+    if (!match) return { status: 400, text: renderOAuthCallbackPage({ title: "Callback not recognized", message: `Invalid sign-in callback. Return to ${oauthCallbackProductName()} and try again.`, success: false }) };
     return this.answer(match, new URL(`${new URL(match.redirectUri).origin}${CALLBACK_PATH}${search.startsWith("?") ? search : ""}`));
   }
 
@@ -500,9 +501,7 @@ export class McpOAuthManager {
   }
 
   private async callback(flow: Flow, request: import("node:http").IncomingMessage, response: import("node:http").ServerResponse): Promise<void> {
-    response.setHeader("Cache-Control", "no-store");
-    response.setHeader("Content-Type", "text/plain; charset=utf-8");
-    response.setHeader("Referrer-Policy", "no-referrer");
+    for (const [name, value] of Object.entries(OAUTH_CALLBACK_HEADERS)) response.setHeader(name, value);
     // A kept-alive connection would carry the next sign-in's callback here after the listener stopped accepting.
     response.setHeader("Connection", "close");
     let callback: URL;
@@ -511,24 +510,23 @@ export class McpOAuthManager {
       if (request.headers.host !== expected.host || !request.url?.startsWith("/")) throw new Error("host");
       callback = new URL(request.url, flow.redirectUri);
     } catch {
-      response.writeHead(400).end("Invalid sign-in callback. Return to OpenMausBot and try again.");
+      response.writeHead(400).end(renderOAuthCallbackPage({ title: "Callback not recognized", message: `Invalid sign-in callback. Return to ${oauthCallbackProductName()} and try again.`, success: false }));
       return;
     }
     const answer = request.method === "GET"
       ? await this.answer(flow, callback)
-      : { status: 400, text: "Invalid or expired sign-in. Return to OpenMausBot and try again." };
+      : { status: 400, text: renderOAuthCallbackPage({ title: "Sign-in expired", message: `This sign-in link is no longer valid. Return to ${oauthCallbackProductName()} and try again.`, success: false }) };
     response.writeHead(answer.status).end(answer.text);
   }
 
-  /** Words fit for a plain page: never the code or the server's own text. */
   private async answer(flow: Flow, callback: URL): Promise<{ status: number; text: string }> {
     try {
       await this.acceptCallback(flow, callback);
       return flow.status.phase === "failed"
-        ? { status: 400, text: `${flow.status.message} You can close this tab.` }
-        : { status: 200, text: "Signed in. You can close this tab and return to OpenMausBot." };
+        ? { status: 400, text: renderOAuthCallbackPage({ title: "Sign-in not approved", message: `${flow.status.message} You can close this tab.`, success: false }) }
+        : { status: 200, text: renderOAuthCallbackPage({ title: "You're all set", message: `Sign-in completed. Return to ${oauthCallbackProductName()} to continue.`, success: true }) };
     } catch (error) {
-      return { status: error instanceof McpSignInError ? error.status : 400, text: "Invalid or expired sign-in. Return to OpenMausBot and try again." };
+      return { status: error instanceof McpSignInError ? error.status : 400, text: renderOAuthCallbackPage({ title: "Sign-in expired", message: `This sign-in link is no longer valid. Return to ${oauthCallbackProductName()} and try again.`, success: false }) };
     }
   }
 

@@ -6,6 +6,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { createLocalJWKSet, jwtVerify, type JSONWebKeySet } from "jose";
 import { writeFileAtomic } from "../atomic.ts";
 import type { ModelCatalog, ProviderAuthenticationStart, ProviderAuthenticationStatus, ProviderSnapshot } from "../contracts.ts";
+import { oauthCallbackProductName, renderOAuthCallbackPage } from "../oauth-callback-page.ts";
 
 const ISSUER = "https://auth.openai.com";
 const RESOURCE = "https://api.openai.com/v1";
@@ -41,6 +42,7 @@ function object(value: unknown): Record<string, unknown> {
 function string(value: unknown, max = 65_536): value is string {
   return typeof value === "string" && value.length > 0 && value.length <= max;
 }
+
 function privateDirectory(path: string): void {
   mkdirSync(path, { recursive: true, mode: 0o700 });
   if (!lstatSync(path).isDirectory() || lstatSync(path).isSymbolicLink()) throw new Error("ChatGPT credential storage must be a private directory.");
@@ -216,7 +218,9 @@ export class ChatGptPlanAuthController {
     const verifier = randomBytes(32).toString("base64url");
     const server = createServer((request, response) => {
       response.setHeader("Cache-Control", "no-store");
-      response.setHeader("Content-Type", "text/plain; charset=utf-8");
+      response.setHeader("Content-Type", "text/html; charset=utf-8");
+      response.setHeader("Content-Security-Policy", "default-src 'none'; img-src data: https:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'");
+      response.setHeader("X-Content-Type-Options", "nosniff");
       response.setHeader("Referrer-Policy", "no-referrer");
       const flow = this.flow;
       let callback: URL;
@@ -225,16 +229,16 @@ export class ChatGptPlanAuthController {
         callback = new URL(request.url, flow.redirectUri);
         if (callback.origin !== new URL(flow.redirectUri).origin) throw new Error("Unexpected callback origin.");
       } catch {
-        response.writeHead(400).end("Invalid sign-in callback. Return to OpenMausBot and try again."); return;
+        response.writeHead(400).end(renderOAuthCallbackPage({ title: "Callback not recognized", message: `Invalid sign-in callback. Return to ${oauthCallbackProductName()} and try again.`, success: false })); return;
       }
       const actual = callback.searchParams.get("state") ?? "";
       if (request.method !== "GET" || callback.pathname !== "/auth/callback" || !flow || flow.server !== server || flow.consumed || flow.status.phase !== "waiting"
         || Buffer.byteLength(actual) !== Buffer.byteLength(flow.state) || !timingSafeEqual(Buffer.from(actual), Buffer.from(flow.state))
         || [...callback.searchParams.keys()].some((key) => callback.searchParams.getAll(key).length !== 1)) {
-        response.writeHead(400).end("Invalid or expired sign-in. Return to OpenMausBot and try again."); return;
+        response.writeHead(400).end(renderOAuthCallbackPage({ title: "Sign-in expired", message: `This sign-in link is no longer valid. Return to ${oauthCallbackProductName()} and try again.`, success: false })); return;
       }
       flow.consumed = true;
-      response.end("Finishing sign-in. You can return to OpenMausBot.");
+      response.end(renderOAuthCallbackPage({ title: "You're all set", message: `Sign-in completed. Return to ${oauthCallbackProductName()} to continue.`, success: true }));
       server.close();
       void this.complete(flow, callback.searchParams);
     });

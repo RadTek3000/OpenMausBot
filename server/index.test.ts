@@ -8663,8 +8663,10 @@ describe("harness HTTP API", () => {
 
       const page = await viaProxy("GET", callback.pathname + callback.search);
       expect(page.status).toBe(200);
-      expect(page.text).toBe("Signed in. You can close this tab and return to OpenMausBot.");
-      expect(page.headers).toMatchObject({ "cache-control": "no-store", "referrer-policy": "no-referrer", "content-type": "text/plain; charset=utf-8" });
+      expect(page.text).toContain("Connection complete");
+      expect(page.text).toContain("HITEK Agent Desk");
+      expect(page.text).not.toContain("OpenMausBot");
+      expect(page.headers).toMatchObject({ "cache-control": "no-store", "referrer-policy": "no-referrer", "content-type": "text/html; charset=utf-8" });
       expect(page.text).not.toContain(callback.searchParams.get("code"));
       expect(JSON.parse((await viaProxy("GET", `${base}/${auth.flowId}`, signedIn)).text).auth.phase).toBe("succeeded");
       expect((await viaProxy("GET", callback.pathname + callback.search)).status).toBe(409);

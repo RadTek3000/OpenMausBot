@@ -66,7 +66,7 @@ describe("McpOAuthManager sign-in", () => {
 
     const page = await approve(started);
     expect(page.status).toBe(200);
-    expect(await page.text()).toMatch(/Signed in/);
+    expect(await page.text()).toContain("Connection complete");
     expect((await settled("docs", started.flowId)).phase).toBe("succeeded");
 
     expect(manager.authState("docs", mcp.url)).toBe("signed-in");
@@ -591,7 +591,10 @@ describe("McpOAuthManager sign-in from a browser on another computer", () => {
     const callback = await returnAddress(started);
     expect(callback.origin + callback.pathname).toBe("https://cloud.example/mcp-oauth/callback");
     const page = await manager.publicCallback("cloud.example", callback.search);
-    expect(page).toEqual({ status: 200, text: "Signed in. You can close this tab and return to OpenMausBot." });
+    expect(page.status).toBe(200);
+    expect(page.text).toContain("Connection complete");
+    expect(page.text).toContain("HITEK Agent Desk");
+    expect(page.text).not.toContain("OpenMausBot");
     expect(manager.status("docs", started.flowId, "alice")?.phase).toBe("succeeded");
     expect(oauth.isValid(`Bearer ${await manager.accessToken("docs", mcp.url)}`)).toBe(true);
 
@@ -608,7 +611,11 @@ describe("McpOAuthManager sign-in from a browser on another computer", () => {
     const forged = new URLSearchParams(callback.search);
     forged.set("state", "forged");
     for (const [host, search] of [["cloud.example", `?${forged}`], ["attacker.example", callback.search], [undefined, callback.search], ["cloud.example", ""]] as const) {
-      expect(await manager.publicCallback(host, search)).toEqual({ status: 400, text: "Invalid sign-in callback. Return to OpenMausBot and try again." });
+      const page = await manager.publicCallback(host, search);
+      expect(page.status).toBe(400);
+      expect(page.text).toContain("Callback not recognized");
+      expect(page.text).toContain("HITEK Agent Desk");
+      expect(page.text).not.toContain("OpenMausBot");
     }
     expect(manager.status("docs", started.flowId, "alice")?.phase).toBe("waiting");
     expect(oauth.counts.token).toBe(0);
@@ -629,7 +636,10 @@ describe("McpOAuthManager sign-in from a browser on another computer", () => {
     const started = await manager.start("docs", mcp.url, undefined, "alice", elsewhere);
     const callback = await returnAddress(started);
     const page = await manager.publicCallback("cloud.example", `${callback.search}&error_description=private`);
-    expect(page).toEqual({ status: 400, text: "Sign-in was not approved. You can close this tab." });
+    expect(page.status).toBe(400);
+    expect(page.text).toContain("Sign-in not approved");
+    expect(page.text).toContain("Sign-in was not approved. You can close this tab.");
+    expect(page.text).not.toContain("OpenMausBot");
     expect(manager.status("docs", started.flowId, "alice")?.phase).toBe("failed");
   });
 

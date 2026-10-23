@@ -222,6 +222,7 @@ import {
 } from "./mcp-registry.ts";
 import { attachCustomMcp } from "./mcp-result-budget.ts";
 import { MCP_OAUTH_CALLBACK_PATH, McpOAuthManager, mcpOAuthRedirectUri } from "./mcp-oauth.ts";
+import { OAUTH_CALLBACK_HEADERS, oauthCallbackProductName, renderOAuthCallbackPage } from "./oauth-callback-page.ts";
 import {
   GROUP_GOAL_MAX_TURNS,
   groupGoalAssignmentKey,
@@ -13453,8 +13454,8 @@ const handleRequest = async (req: IncomingMessage, res: ServerResponse) => {
     if (path === MCP_OAUTH_CALLBACK_PATH) {
       const answer = method === "GET"
         ? await teamConnections.mcpCallback(req.headers.host, url.search)
-        : { status: 400, text: "Invalid sign-in callback. Return to OpenMausBot and try again." };
-      res.writeHead(answer.status, { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store", "referrer-policy": "no-referrer" });
+        : { status: 400, text: renderOAuthCallbackPage({ title: "Sign-in expired", message: `This sign-in link is no longer valid. Return to ${oauthCallbackProductName()} and try again.`, success: false }) };
+      res.writeHead(answer.status, OAUTH_CALLBACK_HEADERS);
       res.end(answer.text);
       return;
     }

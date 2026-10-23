@@ -232,7 +232,10 @@ it("signs Cleo in to a notes server of her own, and only her chat gets her token
       res.setEncoding("utf8").on("data", (chunk: string) => { text += chunk; }).on("end", () => resolve(`${res.statusCode} ${text}`));
     }).on("error", reject);
   });
-  expect(page).toBe("200 Signed in. You can close this tab and return to OpenMausBot.");
+  expect(page).toContain("200 ");
+  expect(page).toContain("Connection complete");
+  expect(page).toContain("HITEK Agent Desk");
+  expect(page).not.toContain("OpenMausBot");
   expect((await team.as(cleo, "GET", "/api/team/my-connections")).body.mcp).toEqual(expect.arrayContaining([expect.objectContaining({ name: "notes", connected: true, how: "sign-in" })]));
   const cleos = await turn(cleo, cleoThread, "Read my notes.");
   const token = /Bearer ([\w.-]+)/.exec(JSON.stringify((cleos.mcpConfig.mcpServers as Record<string, unknown>).notes))?.[1];
