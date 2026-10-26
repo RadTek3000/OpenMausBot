@@ -1,5 +1,8 @@
+import { BRAND_DEFAULTS } from "../../shared/brand-defaults";
+
 export interface Brand {
   name: string;
+  organizationName?: string;
   tagline?: string;
   assistantName?: string;
   cloudName?: string;
@@ -19,17 +22,7 @@ export interface BrandStatus {
   notice?: string;
 }
 
-export const DEFAULT_BRAND: Brand = {
-  name: "HITEK Agent Desk",
-  tagline: "AI operations for HITEK dealers",
-  assistantName: "HITEK Agent",
-  cloudName: "HITEK Cloud",
-  accent: "#E51717",
-  accentBorder: "#FF3B30",
-  accentText: "#FF625C",
-  logo: "/hitek-wordmark.svg",
-  favicon: "/hitek-app-icon.svg",
-};
+export const DEFAULT_BRAND: Brand = BRAND_DEFAULTS;
 
 let current: BrandStatus = { brand: DEFAULT_BRAND, source: "default", file: "" };
 
@@ -43,6 +36,10 @@ export function brandStatus(): BrandStatus {
 
 export function assistantName(b: Brand = current.brand): string {
   return b.assistantName?.trim() || b.name.trim() || "Assistant";
+}
+
+export function organizationName(b: Brand = current.brand): string {
+  return b.organizationName?.trim() || b.name.trim() || "Service";
 }
 
 export function cloudName(b: Brand = current.brand): string {

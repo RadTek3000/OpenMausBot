@@ -119,6 +119,10 @@ The [MCP sign-in fixture](mcp-sign-in.md) checks remote sign-in, callback URL
 paste-back, MCP tools and logout cancellation through the real settings panel
 and a synthetic OAuth provider in a disposable workspace.
 
+The [managed HITEK onboarding fixture](hitek-onboarding.md) checks the hosted
+welcome, CRM OAuth and access discovery, pending AI status, persistence and
+managed Settings at desktop and mobile sizes without live credentials.
+
 The [Whop fixture](whop.md) checks its one-click setup, cancellation, denied
 consent, discovery failures, reconnect and disconnect using that same registry
 and a synthetic provider, without accessing a real Whop account.

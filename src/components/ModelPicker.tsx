@@ -18,6 +18,7 @@ import { useAdvancedMode } from "@/lib/interface-mode";
 import { useOwnerOrAdmin } from "@/lib/use-owner-or-admin";
 
 import { t } from "@/lib/i18n";
+import { organizationName } from "@/lib/brand";
 import { COMPACT_SQUARE } from "@/lib/compact-chip";
 import { threadsOnOwnModel } from "../../shared/thread-model";
 import { ThreadModelsLine } from "./ThreadModelsLine";
@@ -762,6 +763,8 @@ export function ModelPicker({
       }${selectedVariantLabel ? ` · ${selectedVariantLabel}` : selection.effort ? ` · ${t("model.effort.summary", { level: effortLabel(selection.effort) })}` : ""}`
     : selection.model;
   const followLine = follows === true ? `\n${t("model.followsBot", { name: profile.name })}` : follows === false ? `\n${t("model.ownModel")}` : "";
+
+  if (state.config?.hitekManaged) return <span data-hitek-managed-model className="px-2 py-1 text-[12px] text-ink-secondary" title={`Managed by ${organizationName()}`}>{organizationName()} AI</span>;
 
   const trigger = (
     <button data-tour="model"

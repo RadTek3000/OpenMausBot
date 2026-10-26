@@ -1,12 +1,14 @@
 import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { MOVE_BOT_FIELDS, moveKindsRoute, type MoveKindsDeps } from "./cloud-send-kinds.ts";
 import { chiefLevel, readTeamRolesWith } from "./chief-level.ts";
 import { DATA_DIR } from "./config.ts";
 import type { ModelSelection } from "./contracts.ts";
-import { defaultBotPatchRefusal, ensureDefaultBot } from "./default-bot.ts";
+import { defaultBotPatchRefusal, ensureDefaultBot, helperIntroMessage } from "./default-bot.ts";
+import { BRAND_DEFAULTS } from "../shared/brand-defaults.ts";
+import { SHOP_STARTER_PROMPTS } from "../shared/hitek-onboarding.ts";
 import * as mdb from "./message-db.ts";
 import { Store, type BotRecord } from "./store.ts";
 import { availableTools, catalogProfileFromEnv } from "./drivers/agents-catalog.ts";
@@ -29,7 +31,15 @@ function seededBefore(store: Store): BotRecord {
 
 describe("MausBot, every person's helper", () => {
   beforeEach(() => rmSync(DATA_DIR, { recursive: true, force: true }));
-  afterEach(() => readTeamRolesWith(() => null));
+  afterEach(() => { readTeamRolesWith(() => null); vi.unstubAllEnvs(); });
+
+  it("introduces managed shops with CRM tasks instead of provider setup", () => {
+    vi.stubEnv("HITEK_MANAGED_SERVICE", "1");
+    const intro = helperIntroMessage({ name: BRAND_DEFAULTS.assistantName, chiefOfStaff: true });
+    expect(intro.card?.options).toEqual(SHOP_STARTER_PROMPTS);
+    expect(intro.text).toContain("your shop today");
+    expect(intro.text).not.toMatch(/MausBot|set up new bots|personal AI/);
+  });
 
   it("gives a fresh install one MausBot, its Chief, in chrome, introduced once", () => {
     const store = new Store(selection);
@@ -41,7 +51,7 @@ describe("MausBot, every person's helper", () => {
     boot(again);
     expect(again.bots).toHaveLength(1);
     const maus = placeMausBots(again)[0]!;
-    expect(maus).toMatchObject({ name: "MausBot", color: "chrome", chiefOfStaff: true, defaultBot: {} });
+    expect(maus).toMatchObject({ name: BRAND_DEFAULTS.assistantName, color: "chrome", chiefOfStaff: true, defaultBot: {} });
     expect(intros(again, maus)).toHaveLength(1);
   });
 
@@ -52,7 +62,7 @@ describe("MausBot, every person's helper", () => {
     store.createBot({ name: "Writer", title: "Writer", soul: "Write." });
     const before = structuredClone(store.bot(chief.id));
     const maus = boot(store)!;
-    expect(maus).toMatchObject({ name: "MausBot", color: "chrome", defaultBot: {} });
+    expect(maus).toMatchObject({ name: BRAND_DEFAULTS.assistantName, color: "chrome", defaultBot: {} });
     expect(maus.chiefOfStaff).toBeFalsy();
     expect(chiefLevel(maus)).toBe(true);
     expect(store.bot(chief.id)).toEqual(before);
@@ -174,10 +184,10 @@ describe("MausBot, every person's helper", () => {
     const store = new Store(selection);
     const maus = boot(store)!;
     const other = store.createBot({ name: "Writer" });
-    expect(() => store.deleteBot(maus.id)).toThrow(/MausBot can't be deleted or archived/);
+    expect(() => store.deleteBot(maus.id)).toThrow(`${BRAND_DEFAULTS.assistantName} can't be deleted or archived`);
     expect(store.bot(maus.id)).toBeTruthy();
-    expect(defaultBotPatchRefusal(maus, { hidden: true })).toMatch(/Show MausBot in the sidebar/);
-    expect(defaultBotPatchRefusal(other, { sidebarHidden: true })).toMatch(/Only MausBot/);
+    expect(defaultBotPatchRefusal(maus, { hidden: true })).toContain(`Show ${BRAND_DEFAULTS.assistantName} in the sidebar`);
+    expect(defaultBotPatchRefusal(other, { sidebarHidden: true })).toContain(`Only ${BRAND_DEFAULTS.assistantName}`);
     expect(defaultBotPatchRefusal(maus, { sidebarHidden: "yes" })).toBe("sidebarHidden must be true or false");
     expect(defaultBotPatchRefusal(maus, { sidebarHidden: true })).toBeNull();
     store.patchBot(maus.id, { sidebarHidden: true });
@@ -214,7 +224,7 @@ describe("MausBot, every person's helper", () => {
     const ada = ensureDefaultBot(store, { dataDir: DATA_DIR, person: "Ada@Example.com", team: "Acme" })!;
     const bea = ensureDefaultBot(store, { dataDir: DATA_DIR, person: "bea@example.com", team: "Acme" })!;
     expect(ensureDefaultBot(store, { dataDir: DATA_DIR, person: "ada@example.com", team: "Acme" })?.id).toBe(ada.id);
-    expect(ada).toMatchObject({ name: "MausBot", defaultBot: { person: "ada@example.com" }, visibility: { people: ["ada@example.com"] } });
+    expect(ada).toMatchObject({ name: BRAND_DEFAULTS.assistantName, defaultBot: { person: "ada@example.com" }, visibility: { people: ["ada@example.com"] } });
     expect(bea).toMatchObject({ defaultBot: { person: "bea@example.com" }, visibility: { people: ["bea@example.com"] } });
     expect(ada.chiefOfStaff).toBeFalsy();
     expect(intros(store, ada)[0]?.text).toContain("On Acme, I'm here for you and look after your own bots.");

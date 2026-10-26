@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 
 import {
-  APP_NAME,
   APP_REPOSITORY,
   DOCS_URL,
   LICENSE_URL,
@@ -10,6 +9,7 @@ import {
   openExternalLink,
   platformLabel,
 } from "@/lib/app-links";
+import { brand } from "@/lib/brand";
 
 export function AboutDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -30,6 +30,7 @@ export function AboutDialog({ open, onClose }: { open: boolean; onClose: () => v
   if (!open) return null;
 
   const platform = platformLabel(window.ogb?.platform);
+  const appBrand = brand();
 
   return (
     <div
@@ -42,9 +43,9 @@ export function AboutDialog({ open, onClose }: { open: boolean; onClose: () => v
         aria-labelledby="about-dialog-title"
         className="w-full max-w-[360px] rounded-2xl border border-hairline/50 bg-panel p-6 text-center shadow-2xl"
       >
-        <img src="/app-icon.svg" alt="" width={56} height={56} className="mx-auto size-14" />
+        <img src={appBrand.favicon || "/app-icon.svg"} alt="" width={56} height={56} className="mx-auto size-14" />
         <h2 id="about-dialog-title" className="mt-3 text-[17px] font-semibold text-ink">
-          {APP_NAME}
+          {appBrand.name}
         </h2>
         <p className="mt-1 text-[13px] text-ink-secondary">
           Version {appVersion()}

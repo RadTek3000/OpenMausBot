@@ -1,4 +1,5 @@
 import { PASS, type RouteHandler } from "./table.ts";
+import { loadBrand } from "../brand.ts";
 
 export interface HitekConnectionConfig {
   name: string;
@@ -31,9 +32,10 @@ export function hitekConnectionConfig(env: NodeJS.ProcessEnv = process.env): Hit
   if (!url || !oauthClientId || /\s/u.test(oauthClientId)) return null;
   const scopes = (env.HITEK_MCP_OAUTH_SCOPES || "mcp").split(/[\s,]+/u).map((scope) => scope.trim()).filter(Boolean);
   if (!scopes.length) return null;
+  const brand = loadBrand().brand;
   return {
     name: "hitek-crm",
-    label: env.HITEK_CONNECT_LABEL?.trim() || "HITEK CRM",
+    label: env.HITEK_CONNECT_LABEL?.trim() || `${brand.organizationName || brand.name} CRM`,
     url,
     oauthClientId,
     scopes,

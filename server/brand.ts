@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { DATA_DIR } from "./config.ts";
 import { entitled } from "./enterprise.ts";
+import { BRAND_DEFAULTS } from "../shared/brand-defaults.ts";
 
 const HEX_COLOUR = /^#[0-9a-fA-F]{6}$/;
 const MAX_LOGO_CHARS = 300_000;
@@ -15,6 +16,8 @@ export const brandSchema = z
   .object({
     /** Product name shown in the window title, onboarding and settings. */
     name: z.string().trim().min(1, "name must not be empty").max(40, "name must be 40 characters or fewer"),
+    /** Organization name used in managed-service labels. */
+    organizationName: z.string().trim().min(1).max(40).optional(),
     /** One line under the name on the welcome screen. */
     tagline: z.string().trim().max(120, "tagline must be 120 characters or fewer").optional(),
     /** Name shown for the built-in assistant; separate so deployments can brand the product and assistant independently. */
@@ -47,17 +50,7 @@ export const brandSchema = z
 
 export type Brand = z.infer<typeof brandSchema>;
 
-export const DEFAULT_BRAND: Brand = {
-  name: "HITEK Agent Desk",
-  tagline: "AI operations for HITEK dealers",
-  assistantName: "HITEK Agent",
-  cloudName: "HITEK Cloud",
-  accent: "#E51717",
-  accentBorder: "#FF3B30",
-  accentText: "#FF625C",
-  logo: "/hitek-wordmark.svg",
-  favicon: "/hitek-app-icon.svg",
-};
+export const DEFAULT_BRAND: Brand = BRAND_DEFAULTS;
 
 export interface BrandStatus {
   brand: Brand;

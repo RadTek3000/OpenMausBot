@@ -101,6 +101,7 @@ it("runs the HITEK identity adapter through the real session, permissions and we
   const cookie = setCookie.split(";")[0];
   expect(await signedIn.text()).not.toContain("fixture-only-provider-token");
   expect((await call("/api/bots", undefined, cookie)).status).toBe(200);
+  expect(await (await call("/api/config", undefined, cookie)).json()).toMatchObject({ hitekManaged: true });
   expect((await call("/api/bots", {}, cookie, "https://attacker.test")).status).toBe(403);
   const webhooks = await call("/api/webhooks", undefined, cookie);
   expect(webhooks.status).toBe(200);

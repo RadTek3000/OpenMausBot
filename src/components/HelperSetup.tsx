@@ -1,4 +1,4 @@
-import { AppWindow, Bot as BotIcon, Cloud, Smartphone, Sparkles, type LucideIcon } from "lucide-react";
+import { AppWindow, Bot as BotIcon, Cloud, Link2, Smartphone, Sparkles, type LucideIcon } from "lucide-react";
 
 import { t } from "@/lib/i18n";
 import { setupSteps, type SetupStep } from "@/lib/default-bot";
@@ -29,6 +29,7 @@ export function setupAction(step: SetupStep): Action {
 /** What is left to set up, under the HITEK Agent intro on a new install. */
 export function HelperSetup() {
   const { state, dispatch } = useStore();
+  if (state.config?.hitekManaged) return <button type="button" onClick={() => dispatch({ type: "toggleWelcome", open: true })} className="ui-button"><Link2 size={14} /> Review connection</button>;
   const steps = setupSteps({
     aiReady: state.instances.some(engineReady),
     ownBots: state.bots.filter((bot) => !bot.hidden && !bot.defaultBot).length,

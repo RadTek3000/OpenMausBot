@@ -56,7 +56,7 @@ export function AgentWelcome({ viewer }: { viewer: WelcomeViewer | null }) {
     remoteClient: window.ogb?.remoteClient?.active === true, legacyDone: emailGateDone(),
     hosted: viewer.hosted, canSave: viewer.canSave, cloudHome: viewer.cloudHome,
   });
-  const due = !closed && Boolean(state.config) && agentWelcomeDue({ bot, onboardingDue, welcomeOpen: state.welcomeOpen, tourOpen: touring });
+  const due = !state.config?.hitekManaged && !closed && Boolean(state.config) && agentWelcomeDue({ bot, onboardingDue, welcomeOpen: state.welcomeOpen, tourOpen: touring });
   useEffect(() => { if (due && bot) setShownFor(bot.id); }, [due, bot]);
   useEffect(() => {
     if (!shownFor || closed) return;

@@ -3,6 +3,7 @@ import { AlertTriangle, Check, Copy, Download, ExternalLink, KeyRound, Loader2, 
 import { api, type EngineInstall, type InstanceInfo, useStore } from "@/state/store";
 import { cn } from "@/lib/cn";
 import { t } from "@/lib/i18n";
+import { organizationName, rebrandDisplayedText } from "@/lib/brand";
 import { copyText } from "@/lib/copy-text";
 import { DEVICE_SIGN_IN_COPY, DeviceSignIn, deviceSignInProvider } from "./DeviceSignIn";
 import { ClaudeSignIn } from "./ClaudeSignIn";
@@ -468,6 +469,8 @@ function ApiKeyEngineSetup({ instance, className, unframed, configured = false }
 }
 
 export function ApiKeyEngineManage({ instance, className }: { instance: InstanceInfo; className?: string }) {
+  const { state } = useStore();
+  if (state.config?.hitekManaged) return null;
   if (!hasSavedApiKey(instance)) return null;
   return <ApiKeyEngineSetup instance={instance} className={className} unframed={false} configured />;
 }
@@ -486,6 +489,7 @@ export function EngineSetup({
   description?: string;
 }) {
   const { state } = useStore();
+  if (state.config?.hitekManaged) return <p className={cn("text-[13px] leading-relaxed text-ink-secondary", className)}>AI service is managed by {organizationName()}. Contact {organizationName()} if it is unavailable.</p>;
   const cloudHome = state.config?.cloudHome === true;
   const install = instance.install;
   const installCommand = installCommandFor(install);
@@ -532,7 +536,7 @@ export function EngineSetup({
       <div className={cn(!unframed && "rounded-xl border border-hairline/40 bg-control/30 p-3", className)}>
         <div className="text-[13px] font-semibold text-ink">{t("engineSetup.notReady", { name: instance.displayName })}</div>
         <p className="mt-1 text-[12px] leading-relaxed text-ink-secondary">
-          {instance.snapshot.authenticationUnavailableReason ?? instance.snapshot.reason ?? t("engineSetup.noReason")}
+          {rebrandDisplayedText(instance.snapshot.authenticationUnavailableReason ?? instance.snapshot.reason ?? t("engineSetup.noReason"))}
         </p>
       </div>
     );
@@ -552,7 +556,7 @@ export function EngineSetup({
 
       {instance.snapshot.state === "unavailable" && instance.snapshot.reason && (
         <p role="alert" className="mt-2 text-[12px] leading-relaxed text-danger">
-          {instance.snapshot.reason}
+          {rebrandDisplayedText(instance.snapshot.reason)}
         </p>
       )}
 

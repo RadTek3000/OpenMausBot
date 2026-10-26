@@ -8,6 +8,7 @@ import { WindowDragStrip } from "@/components/DesktopCapabilities";
 import { splitEngineRail } from "@/lib/engine-rail";
 import { t } from "@/lib/i18n";
 import { brand } from "../lib/brand";
+import { HitekServiceStatus } from "./HitekServiceStatus";
 
 export function NoEngines() {
   const { state, dispatch, refreshInstances } = useStore();
@@ -21,6 +22,18 @@ export function NoEngines() {
       setRechecking(false);
     }
   };
+
+  if (state.config?.hitekManaged) {
+    return <main className="relative flex h-full min-w-0 flex-1 items-center justify-center overflow-y-auto bg-app px-6 py-10">
+      <WindowDragStrip />
+      <div className="w-full max-w-[480px]">
+        {brand().logo && <img src={brand().logo} alt={brand().name} className="mb-6 h-7 w-32 object-contain object-left" />}
+        <h1 className="text-[22px] font-semibold text-ink">Your workspace is open</h1>
+        <HitekServiceStatus />
+        <button type="button" onClick={() => dispatch({ type: "toggleWelcome", open: true })} className="mt-4 ui-button">Review setup</button>
+      </div>
+    </main>;
+  }
 
   if (remoteClient) {
     return (

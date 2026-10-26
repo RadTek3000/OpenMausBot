@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { emailGateDone } from "@/lib/analytics";
-import { hostedMember, LOCAL_VIEWER, welcomeDue, welcomeViewer, type BeatId, type WelcomeViewer } from "@/lib/onboarding";
+import { hintSeen, hostedMember, LOCAL_VIEWER, welcomeDue, welcomeViewer, type BeatId, type WelcomeViewer } from "@/lib/onboarding";
 import { api, useStore } from "@/state/store";
 import { SharedWorkspaceHint } from "./SharedWorkspaceHint";
 import { WelcomeFlow } from "./WelcomeFlow";
+import { HitekWelcome, HITEK_WELCOME_HINT } from "./HitekWelcome";
 
 /**
  * Security: a remote page the desktop app loads gets a reduced but truthy window.ogb without remoteClient, and is no
@@ -39,6 +40,14 @@ export function WelcomeGate({ viewer }: { viewer: WelcomeViewer | null }) {
   const [resumeAt, setResumeAt] = useState<BeatId | undefined>(undefined);
   const remoteClient = window.ogb?.remoteClient?.active === true;
   if (!viewer) return null;
+  if (state.config?.hitekManaged) {
+    const due = !dismissed && viewer.canSave && !hintSeen(state.config.onboarding, HITEK_WELCOME_HINT);
+    if (!state.welcomeOpen && !due) return null;
+    return <HitekWelcome viewer={viewer} onDone={() => {
+      setDismissed(true);
+      dispatch({ type: "toggleWelcome", open: false });
+    }} />;
+  }
   if (hostedMember(viewer)) {
     return remoteClient ? null : (
       <SharedWorkspaceHint

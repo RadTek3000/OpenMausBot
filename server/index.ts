@@ -613,6 +613,7 @@ import { createConfigRoutes } from "./routes/config.ts";
 import { createInstanceRoutes } from "./routes/instances.ts";
 import { createMcpServerRoutes } from "./routes/mcp-servers.ts";
 import { createHitekConnectRoutes } from "./routes/hitek-connect.ts";
+import { hitekManagedService } from "./hitek-managed.ts";
 import { teamAdminSummary } from "./cloud-team-admin.ts";
 import { createSetupImportRoutes } from "./routes/setup-import.ts";
 import { createComputerRoutes } from "./routes/computers.ts";
@@ -12604,6 +12605,7 @@ function configStatus() {
   const eventLogMaxBytes = threadEventLogMaxBytes(cfg);
   const eventLogRetentionDays = threadEventLogRetentionDays(cfg);
   return {
+    hitekManaged: hitekManagedService(),
     xai: { configured: Boolean(cfg.xai?.key) },
     mistral: { configured: Boolean(cfg.mistral?.key) },
     cerebras: { configured: Boolean(cfg.cerebras?.key) },

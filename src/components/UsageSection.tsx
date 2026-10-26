@@ -175,6 +175,7 @@ export function RunRow({ root, onOpen }: { root: TraceRootSummary; onOpen: () =>
 
 /** The Usage page: a period's totals, where the money went, and every run as a trace. */
 export function UsageSection() {
+  const { state } = useStore();
   const [period, setPeriod] = useState<UsagePeriod>("month");
   const range = useMemo(() => usagePeriodRange(period), [period]);
   const [list, setList] = useState<TraceList | null>(null);
@@ -252,7 +253,7 @@ export function UsageSection() {
           </section>
         </>
       )}
-      <PlanUsage />
+      {!state.config?.hitekManaged && <PlanUsage />}
       <UsageBudgetCards budget={budget} />
     </div>
   );

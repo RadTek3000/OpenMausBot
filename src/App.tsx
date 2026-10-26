@@ -130,8 +130,9 @@ function Shell({ viewer }: { viewer: WelcomeViewer | null }) {
 
   const noEngines =
     state.connected &&
-    state.instances.length > 0 &&
-    !state.instances.some((i) => i.snapshot.state === "available");
+    (state.config?.hitekManaged
+      ? !state.instances.some(engineReady)
+      : state.instances.length > 0 && !state.instances.some((i) => i.snapshot.state === "available"));
   const cloudSignIn = cloudSignInDue(viewer, state, engineReady);
   const cloudIntent = useCloudIntent();
   const cloudAsk = cloudIntentShown(cloudIntentDue({

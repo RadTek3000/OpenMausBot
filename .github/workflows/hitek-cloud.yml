@@ -35,6 +35,8 @@ jobs:
         run: pnpm exec vitest run server/hitek-supabase-auth.test.ts server/hitek-cloud-api.test.ts server/account-signin.test.ts server/mcp-oauth.test.ts server/routes/hitek-connect.test.ts scripts/hitek-cloud.test.mjs scripts/hitek-railway-start.test.mjs scripts/hitek-usage-export.test.mjs src/lib/analytics.test.ts src/lib/analytics.wire.test.ts src/pair/PairPage.test.ts server/brand.test.ts src/lib/brand.test.ts
       - name: Deployment script syntax
         run: bash -n deploy/hitek/cloud/deploy.sh && bash -n deploy/hitek/cloud/backup.sh
+      - name: Managed onboarding regression tests
+        run: pnpm exec vitest run server/hitek-managed.test.ts src/components/onboarding/HitekWelcome.test.ts src/components/onboarding/WelcomeGate.test.ts src/components/McpServersPanel.hitek.test.ts src/components/SettingsModal.simple.test.ts src/components/AgentWelcome.test.ts
 
   image:
     needs: test

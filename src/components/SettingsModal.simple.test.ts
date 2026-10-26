@@ -43,6 +43,7 @@ const { marker } = vi.hoisted(() => ({
   marker: (name: string) => () => `MARKER:${name};`,
 }));
 vi.mock("./EnginesSettings", () => ({ EnginesSettings: marker("engines") }));
+vi.mock("./HitekAccountSettings", () => ({ HitekAccountSettings: marker("hitekAccount") }));
 vi.mock("./DecisionModelSettings", () => ({ DecisionModelSettings: marker("decisionModel") }));
 vi.mock("./ApiKeys", () => ({
   ApiKeyRow: marker("apiKey"),
@@ -94,6 +95,22 @@ const blocks = (html: string) => [...html.matchAll(/data-settings-block="([^"]+)
 const markers = (html: string) => [...html.matchAll(/MARKER:([^;]+);/g)].map((match) => match[1]);
 
 describe("Settings in Simple mode", () => {
+  it("shows only HITEK-managed settings even when a provider deep link or Advanced mode is requested", () => {
+    fixture.config.hitekManaged = true;
+    expect(pages(render())).toEqual(["general", "appearance", "account"]);
+    expect(markers(render())).toContain("hitekAccount");
+    for (const section of ["engines", "connections", "decisionModel", "companion"] as AppSettingsSection[]) {
+      fixture.section = section;
+      for (const advanced of [true, false]) {
+        fixture.advancedMode = advanced;
+        const html = render();
+        expect(markers(html)).not.toEqual(expect.arrayContaining(["engines", "apiKey"]));
+        expect(html).not.toContain("MARKER:apiKey");
+        expect(html).not.toContain("MARKER:engines");
+        expect(html).not.toContain("MARKER:companion");
+      }
+    }
+  });
   it("draws at most six pages on the desktop, MausBot Cloud among them, and none of the Advanced-only ones", () => {
     const html = render();
     expect(pages(html)).toEqual(["general", "appearance", "ai", "computers", "cloud", "account"]);

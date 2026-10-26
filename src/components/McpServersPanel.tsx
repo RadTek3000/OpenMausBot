@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 
 import { openExternalLink } from "@/lib/app-links";
-import { brand } from "@/lib/brand";
+import { brand, organizationName, rebrandDisplayedText } from "@/lib/brand";
 import { cn } from "@/lib/cn";
 import { t } from "@/lib/i18n";
 import type { LocaleKey } from "@/locales";
@@ -69,6 +69,11 @@ export type McpServerListing = (StdioMcpListing | RemoteMcpListing) & { managedB
 
 export function isRemoteMcpListing(server: McpServerListing): server is RemoteMcpListing {
   return "url" in server;
+}
+
+export function hitekServerMatches(server: McpServerListing, config: HitekConnectConfig): boolean {
+  if (!isRemoteMcpListing(server) || server.name !== config.name || server.oauth?.clientId !== config.oauthClientId) return false;
+  try { return new URL(server.url).href === new URL(config.url).href; } catch { return false; }
 }
 
 type McpTransport = "stdio" | "remote";
@@ -213,14 +218,18 @@ function draftFor(server: McpServerListing): McpDraft {
   };
 }
 
-export function McpServersPanel({ embedded = false, whopCard = false, hideWhop = false, refreshKey = 0, onWhopConnection }: {
+export function McpServersPanel({ embedded = false, whopCard = false, hideWhop = false, refreshKey = 0, onWhopConnection, hitekOnly = false, onHitekConnection, canConnect = true }: {
   embedded?: boolean;
   whopCard?: boolean;
   hideWhop?: boolean;
   refreshKey?: number;
   onWhopConnection?: (connected: boolean) => void;
-} = {}) {
+  hitekOnly?: boolean;
+  onHitekConnection?: (connected: boolean) => void;
+  canConnect?: boolean;
+}) {
   const { state: store, dispatch } = useStore();
+  const organization = organizationName();
   const policy = store.config?.managedPolicy;
   const restricted = Boolean(policy && !policy.mcp.allowCustom);
   const [servers, setServers] = useState<McpServerListing[] | null>(null);
@@ -238,6 +247,8 @@ export function McpServersPanel({ embedded = false, whopCard = false, hideWhop =
   const [callbackError, setCallbackError] = useState<string | null>(null);
   const [completingSignIn, setCompletingSignIn] = useState(false);
   const [hitekConfig, setHitekConfig] = useState<HitekConnectConfig | null>(null);
+  const [hitekLoading, setHitekLoading] = useState(true);
+  const [hitekLoadFailed, setHitekLoadFailed] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [importText, setImportText] = useState("");
   const loadGeneration = useRef(0);
@@ -275,7 +286,7 @@ export function McpServersPanel({ embedded = false, whopCard = false, hideWhop =
     const generation = ++loadGeneration.current;
     setBusy("load");
     setError(null);
-    return api("/api/mcp/servers")
+    return api("/api/mcp/servers", { timeoutMs: 10_000 })
       .then((result) => {
         if (generation === loadGeneration.current) {
           setServers(result.servers ?? []);
@@ -296,17 +307,37 @@ export function McpServersPanel({ embedded = false, whopCard = false, hideWhop =
     return () => { mounted.current = false; loadGeneration.current += 1; };
   }, [load, refreshKey]);
 
-  useEffect(() => {
-    let active = true;
-    void api("/api/hitek/connect")
-      .then((result) => {
-        if (active && result?.configured === true) setHitekConfig(result as HitekConnectConfig);
-      })
-      .catch(() => {
-        if (active) setHitekConfig(null);
-      });
-    return () => { active = false; };
+  const loadHitek = useCallback(async () => {
+    setHitekLoading(true);
+    setHitekLoadFailed(false);
+    try {
+      const result = await api("/api/hitek/connect", { timeoutMs: 10_000 });
+      if (mounted.current) setHitekConfig(result?.configured === true ? result as HitekConnectConfig : null);
+    } catch {
+      if (mounted.current) { setHitekConfig(null); setHitekLoadFailed(true); }
+    } finally { if (mounted.current) setHitekLoading(false); }
   }, []);
+
+  useEffect(() => {
+    void loadHitek();
+  }, [loadHitek]);
+
+  const hitekServer = hitekConfig && servers?.find((server) => server.name === hitekConfig.name);
+  const hitekMatches = Boolean(hitekServer && hitekConfig && hitekServerMatches(hitekServer, hitekConfig));
+  const hitekConnected = Boolean(hitekMatches && hitekServer && isRemoteMcpListing(hitekServer) && hitekServer.auth === "signed-in" && hitekServer.enabled);
+  const hitekProbe = hitekConfig ? probe[hitekConfig.name] : undefined;
+  useEffect(() => { onHitekConnection?.(hitekConnected && hitekProbe?.ok === true); }, [hitekConnected, hitekProbe?.ok, onHitekConnection]);
+  useEffect(() => {
+    if (!hitekOnly || !hitekConnected || !hitekConfig || hitekProbe || signingIn || busy !== null) return;
+    const controller = new AbortController();
+    const name = hitekConfig.name;
+    void signedInToolsCheck(name, api, AbortSignal.any([controller.signal, AbortSignal.timeout(30_000)])).then((result) => {
+      if (!controller.signal.aborted && mounted.current) setProbe((current) => ({ ...current, [name]: result }));
+    }).catch(() => {
+      if (!controller.signal.aborted && mounted.current) setProbe((current) => ({ ...current, [name]: { ok: false, error: "CRM access could not be verified. Try again." } }));
+    });
+    return () => controller.abort();
+  }, [hitekOnly, hitekConnected, hitekConfig, hitekProbe, signingIn, busy]);
 
   const closeEditor = () => {
     setEditing(null);
@@ -501,14 +532,29 @@ export function McpServersPanel({ embedded = false, whopCard = false, hideWhop =
   };
 
   const connectHitek = async () => {
-    if (!hitekConfig || !servers || busy !== null || signingIn !== null) return;
+    if (!canConnect || !hitekConfig || !servers || busy !== null || signingIn !== null) return;
     const existing = servers.find((server) => server.name === hitekConfig.name);
     if (existing) {
-      if (!isRemoteMcpListing(existing)) {
-        setError(`The MCP server name “${hitekConfig.name}” is already used by a local server.`);
+      if (!hitekServerMatches(existing, hitekConfig) || !isRemoteMcpListing(existing)) {
+        setError(`The saved CRM connection does not match this service. Ask ${organization} to update the connection.`);
         return;
       }
-      if (existing.auth === "signed-in") return;
+      if (existing.auth === "signed-in" && probe[existing.name]?.auth !== "required") {
+        setBusy("hitek");
+        setError(null);
+        try {
+          const tested = await signedInToolsCheck(existing.name, api, AbortSignal.timeout(30_000));
+          if (!mounted.current) return;
+          setProbe((current) => ({ ...current, [existing.name]: tested }));
+          if (!tested.ok) return;
+          const enabled = await api(`/api/mcp/servers/${existing.name}`, { method: "PATCH", body: JSON.stringify({ enabled: true }) });
+          if (!mounted.current) return;
+          setServers(enabled.servers ?? []);
+          updateMcpServers(enabled.servers ?? []);
+        } catch (cause) { if (mounted.current) setError(cause instanceof Error ? cause.message : String(cause)); }
+        finally { if (mounted.current) setBusy(null); }
+        return;
+      }
       await signIn(existing);
       return;
     }
@@ -532,7 +578,7 @@ export function McpServersPanel({ embedded = false, whopCard = false, hideWhop =
       setServers(result.servers ?? []);
       updateMcpServers(result.servers ?? []);
       added = result.servers?.find((server: McpServerListing) => server.name === hitekConfig.name);
-      if (!added) throw new Error("HITEK CRM connection could not be created.");
+      if (!added) throw new Error(`${hitekConfig.label} connection could not be created.`);
     } catch (cause) {
       if (mounted.current) setError(cause instanceof Error ? cause.message : String(cause));
     } finally {
@@ -637,7 +683,7 @@ export function McpServersPanel({ embedded = false, whopCard = false, hideWhop =
             {t("mcp.auth.openAgain")}
           </button>
         )}
-        {signInFlow?.flowId && (signInFlow.pasteBack
+        {signInFlow?.flowId && (!hitekOnly || signInFlow.pasteBack) && (signInFlow.pasteBack
           ? <div>
               <p className="leading-relaxed text-ink">{t("mcp.auth.pasteBackHint")}</p>
               {renderPasteBack(server)}
@@ -650,6 +696,32 @@ export function McpServersPanel({ embedded = false, whopCard = false, hideWhop =
         {callbackError && <p role="alert" className="text-danger">{callbackError}</p>}
       </div>
     );
+  }
+
+  if (hitekOnly) {
+    const pending = hitekLoading || busy !== null || signingIn !== null;
+    const failed = error || (hitekProbe && !hitekProbe.ok ? hitekProbe.error : null);
+    const crmLabel = hitekConfig?.label || `${organization} CRM`;
+    const status = hitekLoading ? "Checking connection" : hitekLoadFailed ? "Connection status unavailable" : !hitekConfig ? `Awaiting ${organization} configuration`
+      : hitekConnected && hitekProbe?.ok ? "Connected" : hitekConnected && !hitekProbe ? "Verifying access" : "Not connected";
+    return <section data-hitek-connect className="min-w-0 py-4" aria-label={`${crmLabel} connection`}>
+      <div className="flex flex-wrap items-center gap-3">
+        <LogIn size={18} className="shrink-0 text-accent-text" />
+        <div className="min-w-0 flex-1"><h3 className="text-[14px] font-semibold text-ink">{crmLabel}</h3><p role="status" className="text-[13px] text-ink-secondary">{status}</p></div>
+        {signingIn ? <button type="button" onClick={() => signInAbort.current?.abort()} className="ui-button">Cancel</button>
+          : hitekConnected && hitekProbe?.ok ? <CheckCircle2 size={18} className="text-success" aria-label="CRM connected" />
+          : hitekConfig && canConnect && servers !== null ? <button type="button" disabled={pending} onClick={() => void connectHitek()} className="ui-button">
+            {pending ? <Loader2 size={14} className="animate-spin" /> : <LogIn size={14} />} Connect {crmLabel}
+          </button> : null}
+        {hitekConnected && canConnect && hitekServer && <button type="button" aria-label="Disconnect CRM" title="Disconnect CRM" disabled={pending} onClick={() => void signOut(hitekServer)} className="rounded-md p-2 text-ink-secondary hover:bg-raised disabled:opacity-50"><LogOut size={16} /></button>}
+        <button type="button" aria-label="Refresh CRM connection" title="Refresh CRM connection" disabled={pending} onClick={() => {
+          setProbe({}); void load(); void loadHitek();
+        }} className="rounded-md p-2 text-ink-secondary hover:bg-raised disabled:opacity-50"><RefreshCw size={16} className={pending ? "animate-spin" : ""} /></button>
+      </div>
+      {!hitekConnected && <p className="mt-2 text-[13px] leading-relaxed text-ink-secondary">{!canConnect ? "Your shop administrator manages this connection." : hitekConfig ? `Use your existing ${crmLabel} account.` : `${organization} needs to finish the CRM connection setup for this service.`}</p>}
+      {failed && <p role="alert" className="mt-2 break-words text-[13px] text-danger">{rebrandDisplayedText(typeof failed === "string" ? failed : t(failed.key, failed.params))}</p>}
+      {hitekServer && renderSignIn(hitekServer)}
+    </section>;
   }
 
   if (whopCard) {
@@ -688,8 +760,6 @@ export function McpServersPanel({ embedded = false, whopCard = false, hideWhop =
   }
 
   const visibleServers = servers?.filter((server) => !hideWhop || !isRemoteMcpListing(server) || !isWhopServer(server));
-  const hitekServer = hitekConfig && servers?.find((server) => server.name === hitekConfig.name);
-  const hitekConnected = Boolean(hitekServer && isRemoteMcpListing(hitekServer) && hitekServer.auth === "signed-in" && hitekServer.enabled);
   const hitekBusy = busy === "hitek" || signingIn === hitekConfig?.name;
   const appBrand = brand();
 

@@ -21,6 +21,7 @@ export interface WelcomeViewer {
   hosted: boolean;
   canSave: boolean;
   cloudHome?: boolean;
+  email?: string;
 }
 
 export const LOCAL_VIEWER: WelcomeViewer = { hosted: false, canSave: true };
@@ -34,11 +35,12 @@ export function spotlightsQuiet(viewer: WelcomeViewer | null): boolean {
 }
 
 export function welcomeViewer(session: unknown): WelcomeViewer {
-  const record = session && typeof session === "object" ? (session as { hosted?: unknown; scopes?: unknown; cloudHome?: unknown }) : {};
+  const record = session && typeof session === "object" ? (session as { hosted?: unknown; scopes?: unknown; cloudHome?: unknown; email?: unknown }) : {};
   return {
     hosted: record.hosted === true,
     canSave: Array.isArray(record.scopes) ? record.scopes.includes("admin") : true,
     ...(record.cloudHome === true ? { cloudHome: true } : {}),
+    ...(typeof record.email === "string" ? { email: record.email } : {}),
   };
 }
 

@@ -5,6 +5,8 @@ import type { ModelSelection } from "./store";
 
 /** GET /api/config — configured flags only; secrets are never echoed. */
 export interface ConfigStatus {
+  /** Operator-managed onboarding; not an authorization or tenant-isolation boundary. */
+  hitekManaged?: boolean;
   xai?: { configured: boolean };
   mistral?: { configured: boolean };
   cerebras?: { configured: boolean };

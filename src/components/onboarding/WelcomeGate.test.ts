@@ -23,10 +23,12 @@ vi.mock("@/state/store", () => ({ api: store.api, useStore: () => ({ state: stor
 vi.mock("@/lib/analytics", () => ({ emailGateDone: () => false }));
 // The gate's job is choosing; the flow itself has its own recipe.
 vi.mock("./WelcomeFlow", () => ({ WelcomeFlow: () => null }));
+vi.mock("./HitekWelcome", () => ({ HITEK_WELCOME_HINT: "hitek-welcome-v1", HitekWelcome: () => null }));
 vi.mock("@/components/Avatar", () => ({ MausAvatar: () => null }));
 import { SharedWorkspaceHint } from "./SharedWorkspaceHint";
 import { useWelcomeViewer, WelcomeGate } from "./WelcomeGate";
 import { WelcomeFlow } from "./WelcomeFlow";
+import { HitekWelcome, HITEK_WELCOME_HINT } from "./HitekWelcome";
 
 type Node = ReactElement<Record<string, unknown> & { onClick?: () => void; onClose?: () => void; onOpenOrganisation?: () => void; children?: ReactNode }>;
 function render(component: () => ReactNode) {
@@ -75,6 +77,17 @@ afterEach(() => {
 });
 
 describe("who gets the welcome flow", () => {
+  it("uses the managed HITEK welcome for existing accounts without resetting their onboarding", () => {
+    const onboarding = { ...EMPTY_ONBOARDING, completedAt: "2026-10-26T00:00:00Z", version: WELCOME_VERSION };
+    store.state = { ...store.state, config: { hitekManaged: true, onboarding } };
+    const first = gate(LOCAL_VIEWER).tree!;
+    expect(first.type).toBe(HitekWelcome);
+    (first.props.onDone as () => void)();
+    expect(store.dispatch).not.toHaveBeenCalledWith({ type: "toggleTour", open: true });
+    expect(gate(LOCAL_VIEWER).tree).toBeNull();
+    store.state = { ...store.state, welcomeOpen: true, config: { hitekManaged: true, onboarding: { ...onboarding, hintsSeen: [HITEK_WELCOME_HINT] } } };
+    expect(gate(LOCAL_VIEWER).tree?.type).toBe(HitekWelcome);
+  });
   it("opens the desktop flow for the desktop app's own window, exactly as before", () => {
     vi.stubGlobal("window", LOCAL_PAGE);
     const { tree } = gate(LOCAL_VIEWER);
@@ -106,7 +119,7 @@ describe("who gets the welcome flow", () => {
   it("gives a hosted member a note instead, and nothing that writes the workspace config", async () => {
     const { tree, html } = gate({ hosted: true, canSave: false });
     expect(tree?.type).toBe(SharedWorkspaceHint);
-    expect(html).toContain("Your team&#x27;s shared OpenMausBot");
+    expect(html).toContain("Your team&#x27;s shared HITEK Agent Desk");
     expect(html).not.toContain("role=\"dialog\"");
     fixture.values = [];
     const hint = render(() => SharedWorkspaceHint({ replay: false, onClose: vi.fn() }));
@@ -123,10 +136,10 @@ describe("who gets the welcome flow", () => {
     fixture.values = [];
     expect(render(() => SharedWorkspaceHint({ replay: false, onClose: vi.fn() })).html).toBe("");
     fixture.values = [];
-    expect(render(() => SharedWorkspaceHint({ replay: true, onClose: vi.fn() })).html).toContain("shared OpenMausBot");
+    expect(render(() => SharedWorkspaceHint({ replay: true, onClose: vi.fn() })).html).toContain("shared HITEK Agent Desk");
     vi.stubGlobal("localStorage", { getItem: () => { throw new Error("blocked"); }, setItem: () => { throw new Error("blocked"); } });
     fixture.values = [];
-    expect(render(() => SharedWorkspaceHint({ replay: false, onClose: vi.fn() })).html).toContain("shared OpenMausBot");
+    expect(render(() => SharedWorkspaceHint({ replay: false, onClose: vi.fn() })).html).toContain("shared HITEK Agent Desk");
   });
 
   it("never opens the flow for a hosted member, even when the admin has not finished it", () => {

@@ -169,6 +169,7 @@ export function verificationServerEnvironment(parentEnv: NodeJS.ProcessEnv, data
   }
   // Enables POST /api/testing/org-library; the route does not exist without it.
   if (parentEnv.OMB_TEST_ORG_LIBRARY_KEY) childEnv.OMB_TEST_ORG_LIBRARY_KEY = parentEnv.OMB_TEST_ORG_LIBRARY_KEY;
+  if (parentEnv.OMB_TEST_HITEK_MANAGED === "1") childEnv.HITEK_MANAGED_SERVICE = "1";
   // One log line per browser call and preview frame.
   if (parentEnv.OMB_BROWSER_TIMING === "1") childEnv.OMB_BROWSER_TIMING = "1";
   // A loopback fake only: the key never reaches a real provider.

@@ -4,6 +4,7 @@ import { api, useStore, type Bot, type InstanceInfo } from "@/state/store";
 import { cn } from "@/lib/cn";
 import { glassPopupFrameStyle } from "@/lib/glass-popup";
 import { t } from "@/lib/i18n";
+import { organizationName } from "@/lib/brand";
 import type { LocaleKey } from "@/locales";
 import { readCachedInventory, writeCachedInventory } from "@/lib/connected-apps-cache";
 import { reserveConnectionPage, reusableConnectionUrl, type PendingAuthorization } from "@/lib/connector-oauth";
@@ -632,8 +633,8 @@ export function PluginsPanel() {
                 setupNotice.tone === "warning" ? "bg-warning/10 text-warning" : "bg-control/50 text-ink-secondary",
               )}
             >
-              {t(whopConnected ? "whop.otherAppsSetup" : setupNotice.key)}{" "}
-              <button
+              {state.config?.hitekManaged ? `Additional app connections are awaiting ${organizationName()} configuration.` : t(whopConnected ? "whop.otherAppsSetup" : setupNotice.key)}{" "}
+              {!state.config?.hitekManaged && <button
                 className={cn(
                   "font-medium underline underline-offset-2",
                   setupNotice.tone === "info" && "text-ink",
@@ -645,7 +646,7 @@ export function PluginsPanel() {
                 }}
               >
                 {t("connectors.openSettings")}
-              </button>
+              </button>}
             </div>
           )}
           {botsWithoutApps.length > 0 && (

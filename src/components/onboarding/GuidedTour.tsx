@@ -138,7 +138,7 @@ export function GuidedTour() {
     dispatch({ type: "toggleTour", open: false });
   }, [state.computerOpen, state.pluginsOpen, run, save, dispatch]);
 
-  const active = !dismissed && Boolean(record?.completedAt) && !state.welcomeOpen && step !== null;
+  const active = !state.config?.hitekManaged && !dismissed && Boolean(record?.completedAt) && !state.welcomeOpen && step !== null;
 
   useEffect(() => {
     if (!active || !step || entered.current === step.id) return;

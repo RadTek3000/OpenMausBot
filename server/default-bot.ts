@@ -3,6 +3,8 @@ import { join } from "node:path";
 
 import { writeFileAtomic } from "./atomic.ts";
 import { loadBrand } from "./brand.ts";
+import { hitekManagedService } from "./hitek-managed.ts";
+import { SHOP_STARTER_PROMPTS, shopAssistantIntro } from "../shared/hitek-onboarding.ts";
 import { DEFAULT_BOT_COLOR, DEFAULT_BOT_NAME, defaultBotPerson } from "../shared/default-bot.ts";
 import { takeImportName } from "../shared/import-name.ts";
 import type { BotRecord, Message, Store } from "./store.ts";
@@ -45,6 +47,10 @@ export function ownsDefaultBot(bot: BotRecord | null | undefined, email: string 
 
 /** The English intro; clients that know `helperIntro` say it in the viewer's own language. */
 export function helperIntroMessage(bot: Pick<BotRecord, "name" | "chiefOfStaff">, team?: string | null): Omit<Message, "id" | "at"> {
+  if (hitekManagedService()) {
+    const { title, subtitle } = shopAssistantIntro(bot.name);
+    return { role: "bot", kind: "options", text: `${title} ${subtitle}`, helperIntro: true, card: { title, subtitle, options: [...SHOP_STARTER_PROMPTS], fixedOptions: true } };
+  }
   const title = `Hi, I'm ${bot.name}, your helper for everything here.`;
   const subtitle = [
     "I know this app inside out, so ask me how to do anything. I can set up new bots, apps and routines with you, and tell you what your bots are up to.",

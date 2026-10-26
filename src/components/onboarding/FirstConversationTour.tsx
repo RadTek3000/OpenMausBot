@@ -34,6 +34,7 @@ export function FirstConversationTour({ quiet = false }: { quiet?: boolean }) {
   }, [busy]);
 
   const eligible =
+    !state.config?.hitekManaged &&
     !quiet &&
     !remoteClient &&
     !state.welcomeOpen &&

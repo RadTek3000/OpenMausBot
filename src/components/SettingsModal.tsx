@@ -63,6 +63,7 @@ import { setShowRunCard, useShowRunCard } from "@/lib/run-card-preferences";
 import { parseSendKey, SEND_KEYS, sendKeyLabel, setSendKey, useSendKey } from "@/lib/send-key";
 import { effectiveLanguage, setLanguageChoice, useLanguageChoice } from "@/lib/language-preference";
 import { Select } from "./Select";
+import { HitekAccountSettings } from "./HitekAccountSettings";
 
 // labelKey, not a label: t() reads the active pack when called, so a label resolved at module scope would freeze the
 // boot language.
@@ -120,6 +121,10 @@ export const SIMPLE_PAGES: SimpleSettingsPage[] = [
 ];
 
 export const SIMPLE_HIDDEN_SECTIONS: readonly AppSettingsSection[] = ["backups", "experimental", "workspaces", "skills"];
+
+export function hitekSettingsSection(id: AppSettingsSection): boolean {
+  return ["general", "appearance", "usage", "activity"].includes(id);
+}
 
 export function simpleSettingsPages(
   available: ReadonlyArray<(typeof SECTIONS)[number]>,
@@ -556,6 +561,7 @@ function BrowserProfilesRow() {
 
 export function SettingsModal() {
   const { state, dispatch } = useStore();
+  const managed = state.config?.hitekManaged === true;
   const advanced = useAdvancedMode();
   const remoteActive = window.ogb?.remoteClient?.active === true;
   const section: AppSettingsSection =
@@ -570,6 +576,7 @@ export function SettingsModal() {
   const q = query.trim().toLowerCase();
   const ownerOrAdmin = useOwnerOrAdmin();
   const baseSections = SECTIONS.filter((entry) => !remoteActive || entry.id === "companion" || entry.id === "appearance" || entry.id === "desktopWorkspaces")
+    .filter((entry) => !managed || hitekSettingsSection(entry.id))
     .filter((entry) => entry.id !== "desktopWorkspaces" || Boolean(window.ogb?.environments))
     .filter((entry) => entry.id !== "organization" || Boolean(window.ogb?.organization)).filter((entry) => entry.id !== "import" || Boolean(window.ogb))
     .filter((entry) => entry.id !== "cloudAccount" || Boolean(window.ogb?.cloudAccount || (window.ogb?.cloudPlan && state.config?.cloudHome === true)))
@@ -652,6 +659,7 @@ export function SettingsModal() {
   const openSection = (id: AppSettingsSection) => dispatch({ type: "toggleAppSettings", open: true, section: id });
 
   const renderSection = (id: AppSettingsSection) => {
+    if (managed && !hitekSettingsSection(id)) return null;
     switch (id) {
       case "desktopWorkspaces":
         return <ConnectedWorkspacesSettings />;
@@ -663,6 +671,7 @@ export function SettingsModal() {
             onConnectPhone={() => dispatch(phonePairingSettingsAction())} onAddCloud={() => dispatch({ type: "openCloudAdd", source: "app_settings" })} onSignIn={() => dispatch({ type: "openCloudAdd", source: "app_settings", signIn: true })} />
           : null;
       case "general":
+        if (managed) return <><HitekAccountSettings /><LanguageRow /></>;
         return (
           <>
             <AdvancedModeRow />

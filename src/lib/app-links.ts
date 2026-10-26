@@ -1,4 +1,6 @@
-export const APP_NAME = "HITEK Agent Desk";
+import { BRAND_DEFAULTS } from "../../shared/brand-defaults";
+
+export const APP_NAME = BRAND_DEFAULTS.name;
 export const APP_REPOSITORY = "https://hitekfilms.com";
 export const DOCS_URL = "https://hitekfilms.com";
 export const HELP_CENTER_URL = DOCS_URL;
