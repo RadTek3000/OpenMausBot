@@ -15,3 +15,10 @@ electron/resources/cloudflared*
 .env
 **/.env
 **/.env.*
+**/runtime.env
+**/backup.env
+**/release.env*
+**/backup-password
+**/.dev.vars
+**/.dev.vars.*
+deploy/hitek/instances

@@ -1,10 +1,18 @@
-// The phc_ token is a write-only public key, safe to ship in the client.
 // posthog-js loads on demand: a static import would put ~240 kB into the startup bundle.
 import type { CaptureResult, PostHog } from "posthog-js";
 import { DESKTOP_PORTS } from "../../electron/desktop-ports.mjs";
 import { appVersion } from "@/lib/app-links";
 
-const TOKEN = "phc_m2hP39w8y2gLPvHgDvSXAu6xcZ3agjf4ruL56rGcMZEe";
+function analyticsTarget(): { token: string; host: string } | null {
+  const token = import.meta.env.VITE_HITEK_ANALYTICS_KEY?.trim();
+  const host = import.meta.env.VITE_HITEK_ANALYTICS_HOST?.trim();
+  if (!token || !host) return null;
+  try {
+    const url = new URL(host);
+    return url.protocol === "https:" && !url.username && !url.password && !url.search && !url.hash && url.pathname === "/"
+      ? { token, host: url.origin } : null;
+  } catch { return null; }
+}
 
 // Read before init(): an opted-out install must never call posthog.init(), so no request leaves the machine.
 const OPT_OUT_KEY = "omb-analytics-opt-out";
@@ -26,6 +34,7 @@ let pending: Array<(ph: PostHog) => void> = [];
 let choice: boolean | undefined;
 
 export function analyticsEnabled(): boolean {
+  if (!analyticsTarget()) return false;
   if (choice !== undefined) return choice;
   const desktop = desktopSwitch()?.enabled();
   if (typeof desktop === "boolean") return desktop;
@@ -45,6 +54,7 @@ export function optAction(enabled: boolean, running: boolean): OptAction {
 }
 
 export function setAnalyticsEnabled(enabled: boolean) {
+  enabled = enabled && Boolean(analyticsTarget());
   choice = enabled;
   void desktopSwitch()?.set?.(enabled).catch(() => {});
   try {
@@ -93,12 +103,13 @@ export function initAnalytics(): Promise<void> {
 }
 
 function start(posthog: PostHog) {
-  if (!analyticsEnabled()) {
+  const target = analyticsTarget();
+  if (!target || !analyticsEnabled()) {
     pending = [];
     return;
   }
-  posthog.init(TOKEN, {
-    api_host: "https://us.i.posthog.com",
+  posthog.init(target.token, {
+    api_host: target.host,
     autocapture: false, // never capture clicked-element text (conversation leak)
     capture_pageview: false,
     person_profiles: "identified_only",

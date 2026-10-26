@@ -26,7 +26,7 @@ export function pairsAutomatically(initialCode: string | null, desktop = typeof 
 }
 
 export function pairIntro({ mode, sent, email, cloudHome }: { mode: "email" | "code" | null; sent: boolean; email: string; cloudHome: boolean }): string {
-  if (mode === "email") return sent ? `We emailed an 8-digit code to ${email}. It works once and expires in ten minutes.` : "Enter your email and we will send you a one-time code.";
+  if (mode === "email") return sent ? `Enter the one-time code sent to ${email}.` : "Enter your email and we will send you a one-time code.";
   if (cloudHome) return `To open ${cloudName()}, choose Open the Cloud in the ${brand().name} app on your computer (Settings → ${cloudName()}), or use it in your browser on your plan page. Have a pairing code? Enter it below.`;
   return "Enter the pairing code shown on the server. Codes work once and expire after five minutes.";
 }
@@ -161,7 +161,7 @@ export function PairPage({ initialCode, initialEmail = null, reason }: { initial
                   id="signin-code"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
-                  placeholder="12345678"
+                  maxLength={10}
                   autoComplete="one-time-code"
                   inputMode="numeric"
                   spellCheck={false}
@@ -174,7 +174,7 @@ export function PairPage({ initialCode, initialEmail = null, reason }: { initial
               </>
             ) : null}
             {error ? <p className="mt-3 text-[13px] text-danger">{error}</p> : null}
-            <button type="submit" disabled={busy || !email.includes("@") || (sent && otp.replace(/\D/g, "").length < 8)} className={button}>
+            <button type="submit" disabled={busy || !email.includes("@") || (sent && !/^\d{6,10}$/.test(otp.trim()))} className={button}>
               {busy ? (sent ? "Signing in…" : "Sending…") : sent ? "Sign in" : "Send code"}
             </button>
             {sent ? (

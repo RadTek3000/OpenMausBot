@@ -59,7 +59,7 @@ export function rebrandDisplayedText(text: string): string {
     .replaceAll("MausBot Cloud", cloud)
     .replaceAll("OpenMausBot", product)
     .replaceAll("MausBot", assistant)
-    .replace(/(?<![A-Za-z0-9_.-])openmausbot(?![A-Za-z0-9_.:\/-])/gi, product);
+    .replace(/(?<![A-Za-z0-9_.-])openmausbot(?![A-Za-z0-9_.:/-])/gi, product);
 }
 
 const HEX = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i;

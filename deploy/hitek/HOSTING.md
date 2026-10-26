@@ -1,5 +1,10 @@
 # HITEK Agent Desk hosting architecture
 
+Implementation and verification status: [`cloud/README.md`](cloud/README.md).
+The first pilot uses operator-provisioned isolated runtimes and Supabase email
+identity. A full self-service control plane remains a later phase; the diagram
+below is the target architecture, not a claim that every component is live.
+
 HITEK CRM remains the source of truth for dealer, customer, vehicle, quote, job,
 and booking records. Agent Desk stores the operational state needed to run a
 hosted assistant: identity, conversations, approvals, usage, audit history,

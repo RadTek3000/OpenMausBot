@@ -1,0 +1,68 @@
+name: hitek-${HITEK_DEPLOYMENT_ID:?Set a unique deployment ID}
+
+services:
+  runtime:
+    image: ${HITEK_IMAGE:?Set the HITEK image digest or immutable tag}
+    init: true
+    restart: unless-stopped
+    stop_grace_period: 60s
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    shm_size: 512m
+    mem_limit: ${HITEK_MEMORY_LIMIT:-4g}
+    cpus: ${HITEK_CPU_LIMIT:-2}
+    pids_limit: 1024
+    tmpfs:
+      - /tmp:size=512m,mode=1777
+    env_file:
+      - path: ./runtime.env
+        format: raw
+    environment:
+      OMB_PORT: "8799"
+      OMB_WEBHOOK_PORT: "8800"
+      OMB_PUBLIC_URL: https://${HITEK_DOMAIN:?Set the dealer hostname}
+      OMB_WEBHOOK_PUBLIC_URL: https://${HITEK_DOMAIN}
+      OMB_MCP_OAUTH_PUBLIC_CALLBACK: "1"
+      OMB_LOOPBACK_TRUST: service
+      OMB_ENVIRONMENT_LABEL: ${HITEK_WORKSPACE_LABEL:-HITEK Agent Desk}
+    volumes:
+      - runtime_data:/data
+    ports:
+      - "80:80"
+      - "443:443"
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:8799/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      start_period: 90s
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: json-file
+      options: { max-size: 10m, max-file: "3" }
+
+  edge:
+    image: caddy:2.10.2
+    restart: unless-stopped
+    network_mode: service:runtime
+    read_only: true
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    security_opt: [no-new-privileges:true]
+    depends_on:
+      runtime: { condition: service_healthy }
+    environment:
+      HITEK_DOMAIN: ${HITEK_DOMAIN}
+      HITEK_TLS_EMAIL: ${HITEK_TLS_EMAIL:?Set the certificate contact email}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - tls_data:/data
+      - tls_config:/config
+    logging:
+      driver: json-file
+      options: { max-size: 10m, max-file: "3" }
+
+volumes:
+  runtime_data:
+  tls_data:
+  tls_config:

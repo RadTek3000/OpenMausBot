@@ -2,6 +2,7 @@
 // server, and a server with an empty allow-list does not expose the routes. The result is an ordinary local session.
 import { resolveCompanionControlPlaneURL } from "../electron/companion-account-service.mjs";
 import { ControlPlaneError, createControlPlaneClient, normalizeAccountEmail, type ControlPlaneClient } from "../electron/control-plane-client.mjs";
+import { createSupabaseEmailIdentity, supabaseAuthConfigured, type EmailIdentityProvider } from "./hitek-supabase-auth.ts";
 import type { Scope } from "./sessions.ts";
 
 /** Who may sign in. `a@b.com` is that address; `@b.com` is everyone at b.com. */
@@ -49,9 +50,13 @@ export function createEmailSignIn(options: {
 }): EmailSignIn {
   const env = options.env ?? process.env;
   const allow = () => (typeof options.allow === "function" ? options.allow() : options.allow);
-  let client: ControlPlaneClient | null = options.client ?? null;
-  const controlPlane = (): ControlPlaneClient => {
+  let client: EmailIdentityProvider | null = options.client ?? null;
+  const controlPlane = (): EmailIdentityProvider => {
     if (client) return client;
+    if (supabaseAuthConfigured(env)) {
+      client = createSupabaseEmailIdentity(env, options.fetchImpl);
+      return client;
+    }
     const url = resolveCompanionControlPlaneURL({ isPackaged: true, environment: env });
     if (!url) throw new Error("OMB_CONTROL_PLANE_URL is set but is not an https address");
     client = createControlPlaneClient({ baseURL: url, fetchImpl: options.fetchImpl });
@@ -80,12 +85,12 @@ export function createEmailSignIn(options: {
         // The client refuses a malformed code before any request (status 0);
         // the control plane's own "invalid_otp" is a wrong or expired code.
         if (error instanceof ControlPlaneError && error.code === "invalid_otp" && !error.status) {
-          return { ok: false, status: 400, error: "enter the 8-digit code from the email" };
+          return { ok: false, status: 400, error: "enter the code from the email" };
         }
         if (error instanceof ControlPlaneError && error.status === 429) {
           return { ok: false, status: 429, error: "too many attempts; wait a minute and request a new code" };
         }
-        if (error instanceof ControlPlaneError && (error.status === 400 || error.status === 401 || error.status === 403)) {
+        if (error instanceof ControlPlaneError && (error.status === 400 || error.status === 401 || error.status === 403 || error.status === 422)) {
           return { ok: false, status: 401, error: "that code is wrong or has expired; request a new one" };
         }
         return unavailable(error);

@@ -4,6 +4,10 @@ This profile turns the OpenMausBot fork into a hosted HITEK dealer assistant.
 Dealers should sign in to HITEK Agent Desk and use the prepared team. They
 should not be asked to install Node, paste MCP tokens, or edit JSON files.
 
+The executable hosted pilot and its remaining launch requirements are in
+[`cloud/README.md`](cloud/README.md). Use that HITEK stack, not the upstream
+generic Compose image or its account services.
+
 ## Configure the HITEK connection
 
 For dealer sign-in, set these variables only in the hosted agent environment.
@@ -16,6 +20,10 @@ bearer token is placed in the browser or committed to the fork.
 OAuth service for Agent Desk. Do not reuse a Claude client ID. The HITEK MCP
 service must advertise OAuth discovery and accept the loopback PKCE redirect
 used by the desktop client.
+
+For the hosted pilot, register the exact public HTTPS callback instead and
+enable `OMB_MCP_OAUTH_PUBLIC_CALLBACK=1` with an HTTPS `OMB_PUBLIC_URL`.
+The cloud stack sets these values from its deployment settings.
 
 ```powershell
 $env:HITEK_MCP_URL = "https://your-hitek-api-host/mcp"

@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { McpOAuthError, McpOAuthManager, mcpCallbackOrigin, mcpOAuthRedirectUri, type McpSignInStatus, withMcpSignIn, withoutPendingSignIn } from "./mcp-oauth.ts";
+import { McpOAuthError, McpOAuthManager, configuredMcpCallbackOrigin, mcpCallbackOrigin, mcpOAuthRedirectUri, type McpSignInStatus, withMcpSignIn, withoutPendingSignIn } from "./mcp-oauth.ts";
 import type { McpOAuthClientConfig } from "./mcp-registry.ts";
 import { startFakeHttpMcp, type FakeHttpMcp } from "./testing/fake-http-mcp-server.ts";
 import { startFakeOAuth, type FakeOAuth, type FakeOAuthOptions } from "./testing/fake-oauth-server.ts";
@@ -16,7 +16,7 @@ let mcp: FakeHttpMcp;
 let manager: McpOAuthManager;
 let registered: McpOAuthClientConfig | undefined;
 
-async function setup(options: FakeOAuthOptions = {}, lifetimeMs?: number) {
+async function setup(options: FakeOAuthOptions = {}, lifetimeMs?: number, publicCallbackOrigin?: string) {
   oauth = await startFakeOAuth(options);
   mcp = await startFakeHttpMcp({ acceptBearer: oauth.isValid, wwwAuthenticate: oauth.challenge });
   // a pre-registered app returns to the port derived from the URL: make it a free one
@@ -25,6 +25,7 @@ async function setup(options: FakeOAuthOptions = {}, lifetimeMs?: number) {
     file: join(dir, "mcp-oauth.json"),
     ...(lifetimeMs ? { lifetimeMs } : {}),
     clients: (name, url) => (name === "docs" && url === mcp.url ? registered : undefined),
+    publicCallbackOrigin,
   });
 }
 
@@ -569,6 +570,27 @@ describe("MCP sign-in from another computer", () => {
 describe("McpOAuthManager sign-in from a browser on another computer", () => {
   const elsewhere = { remote: true, origin: "https://cloud.example" };
 
+  it.each([undefined, "private-client-secret"])("uses an explicitly configured HTTPS callback for a pre-registered client", async (secret) => {
+    await setup({ noRegistration: true, preRegistered: { corp: secret ?? null } }, undefined, elsewhere.origin);
+    registered = { clientId: "corp", ...(secret ? { clientSecret: secret } : {}), scopes: ["mcp"] };
+    const started = await manager.start("docs", mcp.url, undefined, "alice", elsewhere);
+    expect(new URL(started.authorizationUrl!).searchParams.get("redirect_uri")).toBe("https://cloud.example/mcp-oauth/callback");
+    expect(started.pasteBack).toBeUndefined();
+    expect(oauth.counts.register).toBe(0);
+    const callback = await returnAddress(started);
+    expect((await manager.publicCallback("attacker.example", callback.search)).status).toBe(400);
+    expect((await manager.publicCallback("cloud.example", callback.search)).status).toBe(200);
+    expect((await manager.publicCallback("cloud.example", callback.search)).status).toBe(409);
+    expect(oauth.isValid(`Bearer ${await manager.accessToken("docs", mcp.url)}`)).toBe(true);
+  });
+
+  it("refuses a pre-registered public callback from a different browser origin", async () => {
+    await setup({ noRegistration: true, preRegistered: { corp: null } }, undefined, elsewhere.origin);
+    registered = { clientId: "corp" };
+    await expect(manager.start("docs", mcp.url, undefined, "alice", { remote: true, origin: "https://attacker.example" })).rejects.toMatchObject({ status: 400 });
+    expect(oauth.counts.token).toBe(0);
+  });
+
   async function returnAddress(status: McpSignInStatus): Promise<URL> {
     return new URL((await fetch(status.authorizationUrl!, { redirect: "manual" })).headers.get("location")!);
   }
@@ -679,6 +701,13 @@ describe("McpOAuthManager sign-in from a browser on another computer", () => {
 });
 
 describe("mcpCallbackOrigin", () => {
+  it("enables public pre-registered callbacks only with explicit HTTPS configuration", () => {
+    expect(configuredMcpCallbackOrigin({ OMB_PUBLIC_URL: "https://desk.example" })).toBeUndefined();
+    expect(configuredMcpCallbackOrigin({ OMB_MCP_OAUTH_PUBLIC_CALLBACK: "1", OMB_PUBLIC_URL: "https://desk.example/" })).toBe("https://desk.example");
+    for (const value of [undefined, "http://localhost:8799", "https://user:pw@desk.example", "https://desk.example/path"]) {
+      expect(() => configuredMcpCallbackOrigin({ OMB_MCP_OAUTH_PUBLIC_CALLBACK: "1", OMB_PUBLIC_URL: value })).toThrow();
+    }
+  });
   it("uses the origin the browser proved when nothing is configured or it is configured", () => {
     expect(mcpCallbackOrigin("https://me.fly.dev", [])).toBe("https://me.fly.dev");
     expect(mcpCallbackOrigin("https://bots.acme.com", ["https://me.fly.dev", "https://bots.acme.com"])).toBe("https://bots.acme.com");

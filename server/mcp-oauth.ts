@@ -86,8 +86,20 @@ function preferredPort(url: string): number {
   return 20_000 + (hash % 20_000);
 }
 
-export function mcpOAuthRedirectUri(url: string): string {
+export function mcpOAuthRedirectUri(url: string, publicOrigin?: string): string {
+  if (publicOrigin) {
+    const origin = httpsOrigin(publicOrigin);
+    if (!origin) throw new Error("The public MCP callback requires an HTTPS origin.");
+    return `${origin}${CALLBACK_PATH}`;
+  }
   return `http://127.0.0.1:${preferredPort(url)}${CALLBACK_PATH}`;
+}
+
+export function configuredMcpCallbackOrigin(env: NodeJS.ProcessEnv): string | undefined {
+  if (env.OMB_MCP_OAUTH_PUBLIC_CALLBACK !== "1") return undefined;
+  const origin = httpsOrigin(env.OMB_PUBLIC_URL);
+  if (!origin) throw new Error("OMB_MCP_OAUTH_PUBLIC_CALLBACK requires an HTTPS OMB_PUBLIC_URL.");
+  return origin;
 }
 
 function httpsOrigin(value: string | null | undefined): string | null {
@@ -192,13 +204,16 @@ export class McpOAuthManager {
   private readonly starting = new Map<string, StartingFlow>();
   private readonly refreshing = new Map<string, Promise<string | null>>();
   private readonly clients: (name: string, url: string) => McpOAuthClientConfig | undefined;
+  private readonly publicCallbackOrigin: string | undefined;
 
   /** `clients` is read when needed: an app's secret is never copied into this store. */
-  constructor(options: { file: string; lifetimeMs?: number; clients?: (name: string, url: string) => McpOAuthClientConfig | undefined; isOwnerLive?: (owner: string) => boolean }) {
+  constructor(options: { file: string; lifetimeMs?: number; clients?: (name: string, url: string) => McpOAuthClientConfig | undefined; isOwnerLive?: (owner: string) => boolean; publicCallbackOrigin?: string }) {
     this.store = new McpOAuthStore(options.file);
     this.isOwnerLive = options.isOwnerLive ?? (() => true);
     this.lifetimeMs = options.lifetimeMs ?? DEFAULT_LIFETIME_MS;
     this.clients = options.clients ?? (() => undefined);
+    if (options.publicCallbackOrigin && !httpsOrigin(options.publicCallbackOrigin)) throw new Error("The public MCP callback requires an HTTPS origin.");
+    this.publicCallbackOrigin = httpsOrigin(options.publicCallbackOrigin) ?? undefined;
   }
 
   private recordClient(name: string, record: McpOAuthRecord): ClientAuth | null {
@@ -407,7 +422,7 @@ export class McpOAuthManager {
       method: "POST",
       headers: { "content-type": "application/json", accept: "application/json" },
       body: JSON.stringify({
-        client_name: "OpenMausBot",
+        client_name: oauthCallbackProductName(),
         redirect_uris: [redirectUri],
         grant_types: ["authorization_code", "refresh_token"],
         response_types: ["code"],
@@ -418,7 +433,7 @@ export class McpOAuthManager {
     });
     const body = await response.json().catch(() => ({})) as { client_id?: unknown };
     if (!response.ok || typeof body.client_id !== "string" || !body.client_id) {
-      throw new RegistrationRefused("This server would not register OpenMausBot for sign-in. Try again later.");
+      throw new RegistrationRefused(`This server would not register ${oauthCallbackProductName()} for sign-in. Try again later.`);
     }
     return body.client_id;
   }
@@ -429,6 +444,14 @@ export class McpOAuthManager {
     const meta = await discoverMcpAuth(url, wwwAuthenticate ?? await this.challenge(url));
     if (!meta) throw new McpOAuthError("not-oauth", "This server does not offer an OAuth sign-in. Add its token as a header instead.");
     const registered = this.clients(name, url);
+
+    if (registered && this.publicCallbackOrigin) {
+      if (starting.browser.origin && httpsOrigin(starting.browser.origin) !== this.publicCallbackOrigin) {
+        throw new McpSignInError("Open this workspace at its configured public HTTPS address before signing in.", 400);
+      }
+      const client = { id: registered.clientId, ...(registered.clientSecret ? { secret: registered.clientSecret } : {}), method: tokenAuthMethod(meta, registered.clientSecret) };
+      return { ...this.open(name, url, starting, meta, mcpOAuthRedirectUri(url, this.publicCallbackOrigin), client, null, registered.scopes?.length ? registered.scopes : meta.scopes).status };
+    }
 
     if (!registered && starting.browser.remote && starting.browser.origin) {
       const redirectUri = `${starting.browser.origin}${CALLBACK_PATH}`;

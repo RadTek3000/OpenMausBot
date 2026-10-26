@@ -62,6 +62,8 @@ const baseStorage = {
 vi.stubGlobal("localStorage", baseStorage);
 
 beforeEach(() => {
+  vi.stubEnv("VITE_HITEK_ANALYTICS_KEY", "phc_fixture");
+  vi.stubEnv("VITE_HITEK_ANALYTICS_HOST", "https://analytics.example.test");
   store.clear();
   ph.loads = 0;
   ph.fail = false;
@@ -75,7 +77,7 @@ beforeEach(() => {
   ph.optIns = [];
 });
 // Restored in afterEach: an inline restore would be skipped when an assertion fails mid-test.
-afterEach(() => vi.stubGlobal("localStorage", baseStorage));
+afterEach(() => { vi.stubGlobal("localStorage", baseStorage); vi.unstubAllEnvs(); });
 
 // resetModules keeps the mocked posthog-js cached, so it is registered again and `loads` counts this graph only.
 async function freshAnalytics() {
@@ -106,6 +108,24 @@ describe("optAction", () => {
 });
 
 describe("the stored choice", () => {
+  it("cannot send anything without an operator-configured destination, even after an old opt-in", async () => {
+    vi.stubEnv("VITE_HITEK_ANALYTICS_KEY", "");
+    const fresh = await freshAnalytics();
+    fresh.setAnalyticsEnabled(true);
+    expect(fresh.analyticsEnabled()).toBe(false);
+    await fresh.initAnalytics();
+    expect(ph.loads).toBe(0);
+  });
+
+  it("refuses insecure or credential-bearing analytics destinations", async () => {
+    const fresh = await freshAnalytics();
+    for (const host of ["http://analytics.example.test", "https://user:secret@analytics.example.test", "https://analytics.example.test?secret=value"]) {
+      vi.stubEnv("VITE_HITEK_ANALYTICS_HOST", host);
+      expect(fresh.analyticsEnabled()).toBe(false);
+    }
+    await fresh.initAnalytics();
+    expect(ph.loads).toBe(0);
+  });
   it("is off for a fresh install", () => {
     expect(analyticsEnabled()).toBe(false);
   });

@@ -40,3 +40,8 @@ deploy/podman/.env
 deploy/podman/.env.*
 !deploy/podman/.env.example
 /.env
+/deploy/hitek/cloud/.env
+/deploy/hitek/cloud/*.env
+/deploy/hitek/cloud/release.env.*
+/deploy/hitek/cloud/backup-password
+/deploy/hitek/instances/

@@ -221,7 +221,7 @@ import {
   parseStoredMcpServer,
 } from "./mcp-registry.ts";
 import { attachCustomMcp } from "./mcp-result-budget.ts";
-import { MCP_OAUTH_CALLBACK_PATH, McpOAuthManager, mcpOAuthRedirectUri } from "./mcp-oauth.ts";
+import { MCP_OAUTH_CALLBACK_PATH, McpOAuthManager, configuredMcpCallbackOrigin, mcpOAuthRedirectUri } from "./mcp-oauth.ts";
 import { OAUTH_CALLBACK_HEADERS, oauthCallbackProductName, renderOAuthCallbackPage } from "./oauth-callback-page.ts";
 import {
   GROUP_GOAL_MAX_TURNS,
@@ -1462,8 +1462,10 @@ function bookTurnUsage(row: Omit<UsageRow, "at" | "costSource">, tokensReported 
 }
 
 const providerAuthSessions = new ProviderAuthSessions();
+const MCP_PUBLIC_CALLBACK_ORIGIN = configuredMcpCallbackOrigin(process.env);
 const mcpOAuth = new McpOAuthManager({
   file: join(DATA_DIR, "mcp-oauth.json"),
+  publicCallbackOrigin: MCP_PUBLIC_CALLBACK_ORIGIN,
   isOwnerLive: (owner) => owner === "loopback" || sessions.isLive(owner),
   // Read the registered app when needed; never copy its secret into the token store.
   clients: (name, url) => {
@@ -12703,7 +12705,7 @@ function mcpServerResponse() {
   const servers = listMcpServers(cfg.mcpServers).map((server) => {
     if (!("url" in server)) return server;
     const auth = mcpOAuth.authState(server.name, server.url);
-    const listed = server.oauth ? { ...server, oauth: { ...server.oauth, redirectUri: mcpOAuthRedirectUri(server.url) } } : server;
+    const listed = server.oauth ? { ...server, oauth: { ...server.oauth, redirectUri: mcpOAuthRedirectUri(server.url, MCP_PUBLIC_CALLBACK_ORIGIN) } } : server;
     return auth === "none" ? listed : { ...listed, auth };
   }).map(server =>
     managedPolicy.mcpAllowed(server.name, "url" in server ? server.url : undefined) ? server : { ...server, managedBy: policy!.organizationName });
