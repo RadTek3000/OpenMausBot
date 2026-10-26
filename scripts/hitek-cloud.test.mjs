@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
@@ -44,6 +44,12 @@ describe("HITEK deployment preflight", () => {
       const target = join(temp, "dealer");
       initializeDeployment(target);
       expect(readFileSync(join(target, "compose.yaml"), "utf8")).toContain("network_mode: service:runtime");
+      if (process.platform !== "win32") {
+        expect(statSync(join(target, "Caddyfile")).mode & 0o777).toBe(0o644);
+        for (const secret of [".env", "runtime.env", "backup.env"]) {
+          expect(statSync(join(target, secret)).mode & 0o777).toBe(0o600);
+        }
+      }
       expect(() => readDeployment(target)).toThrow(/real deployment value/);
       expect(() => initializeDeployment(target)).toThrow();
     } finally { rmSync(temp, { recursive: true, force: true }); }

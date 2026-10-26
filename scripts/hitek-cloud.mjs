@@ -77,7 +77,9 @@ export function initializeDeployment(directory) {
     ["compose.yaml", "compose.yaml"], ["Caddyfile", "Caddyfile"], ["deploy.sh", "deploy.sh"],
     ["backup.sh", "backup.sh"], ["backup.env.example", "backup.env"],
   ]) {
-    writeFileSync(join(directory, target), readFileSync(join(template, source)), { flag: "wx", mode: target.endsWith(".sh") ? 0o700 : 0o600 });
+    writeFileSync(join(directory, target), readFileSync(join(template, source)), {
+      flag: "wx", mode: target === "Caddyfile" ? 0o644 : target.endsWith(".sh") ? 0o700 : 0o600,
+    });
   }
   writeFileSync(join(directory, "check.mjs"), readFileSync(fileURLToPath(import.meta.url)), { flag: "wx", mode: 0o600 });
 }
