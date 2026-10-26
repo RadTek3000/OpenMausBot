@@ -35,11 +35,13 @@ multi-tenant control plane or a production availability promise.
    no engine CLI when `ENGINES` is unset; health alone does not prove that a
    bot can answer.
    For a new Supabase Free project, first configure a HITEK-controlled SMTP
-   sender and change its Magic Link email template to contain `{{ .Token }}`.
-   Supabase's default template sends a link, while this app verifies a numeric
-   code. New Free projects cannot customize templates with Supabase's default
-   SMTP service; that service also only sends to organization members at a
-   low rate. Do not grant dealers Supabase organization access to work around
+   sender and change both the Confirm sign up and Magic Link email templates
+   to contain `{{ .Token }}`. New users receive the former; returning users
+   receive the latter. Supabase's default templates send links, while this app
+   verifies a numeric code. New Free projects cannot customize templates with
+   Supabase's default SMTP service; that service also only sends to
+   organization members at a low rate. Do not grant dealers Supabase
+   organization access to work around
    this. See Supabase's [OTP guide](https://supabase.com/docs/guides/auth/auth-email-passwordless),
    [SMTP guide](https://supabase.com/docs/guides/auth/auth-smtp) and
    [Free-tier template change](https://supabase.com/changelog/46599-changes-to-email-template-customisation-on-free-tier).
