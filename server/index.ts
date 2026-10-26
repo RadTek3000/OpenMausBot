@@ -614,6 +614,7 @@ import { createInstanceRoutes } from "./routes/instances.ts";
 import { createMcpServerRoutes } from "./routes/mcp-servers.ts";
 import { createHitekConnectRoutes } from "./routes/hitek-connect.ts";
 import { hitekManagedService } from "./hitek-managed.ts";
+import { hitekModelPolicy } from "./hitek-model-policy.ts";
 import { teamAdminSummary } from "./cloud-team-admin.ts";
 import { createSetupImportRoutes } from "./routes/setup-import.ts";
 import { createComputerRoutes } from "./routes/computers.ts";
@@ -766,7 +767,8 @@ let desktopMutationToken: string | undefined = DESKTOP_MANAGED ? "" : undefined;
 let companionMutationToken: string | undefined = DESKTOP_MANAGED ? "" : undefined;
 const FALLBACK_PUBLIC_URL = process.env.OMB_PUBLIC_URL?.trim().replace(/\/+$/, "") || null;
 const cfg = loadConfig();
-const hostedModels = hostedModelPolicy(DATA_DIR);
+const hitekModels = hitekModelPolicy(DATA_DIR);
+const hostedModels = hostedModelPolicy(DATA_DIR) ?? hitekModels;
 const providerConfigs = () => hostedModels ? hostedModels.configs() : instanceConfigs(cfg);
 const decorateHostedProvider = hostedModels ? (instance: ProviderInstance) => hostedModels.decorate(instance) : undefined;
 if (hostedModels) {

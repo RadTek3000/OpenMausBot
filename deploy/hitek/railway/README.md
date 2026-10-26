@@ -17,7 +17,6 @@ multi-tenant control plane or a production availability promise.
 
    ```text
    HITEK_IMAGE_TARGET=hitek-railway
-   ENGINES=<selected engine CLI package, for example @openai/codex>
    PORT=8080
    HITEK_SUPABASE_URL=<HITEK-owned Supabase HTTPS origin>
    HITEK_SUPABASE_PUBLISHABLE_KEY=<Supabase publishable or legacy anon key>
@@ -29,11 +28,12 @@ multi-tenant control plane or a production availability promise.
    set an upstream control-plane URL or put a Supabase service-role key here.
    The entrypoint fails closed without HITEK sign-in, a named admin email, a
    public HTTPS origin, or the mounted volume.
-   `ENGINES` is a build argument, not an API credential. After deployment,
-   sign in to that engine through the app's Engines settings or configure its
-   provider credential through the service's secrets. The image builds with
-   no engine CLI when `ENGINES` is unset; health alone does not prove that a
-   bot can answer.
+   For managed AI, deploy the separate [AI gateway](../ai-gateway/README.md)
+   and set the Agent Desk variables documented there. The native API engine
+   needs no CLI, dealer API key or model picker. `ENGINES` is an optional
+   Docker build argument for other engine CLIs, not an API credential; setting
+   it on a prebuilt image does not install anything. Health alone does not
+   prove that a bot can answer.
    For a new Supabase Free project, first configure a HITEK-controlled SMTP
    sender and change both the Confirm sign up and Magic Link email templates
    to contain `{{ .Token }}`. New users receive the former; returning users
@@ -59,8 +59,9 @@ multi-tenant control plane or a production availability promise.
    scopes as service variables for the intended **test** CRM environment.
    Register the exact HTTPS `/mcp-oauth/callback` URL with the CRM provider.
    Do not copy a local CRM token or a production dealer's credentials into
-   this pilot. Model/provider credentials likewise belong in Railway service
-   variables or the signed-in app's own credential flow, not in Git.
+   this pilot. The provider master key belongs only in the gateway service's
+   variables; Agent Desk gets a different pilot credential. Never put either
+   key in Git or the dealer onboarding flow.
 6. Deploy staged Railway changes, then test sign-in, Connect HITEK CRM, a
    harmless read, one approved test write, chat persistence after redeploy,
    and a webhook round-trip. Keep any routine that writes to CRM paused until

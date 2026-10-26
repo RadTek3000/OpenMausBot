@@ -72,7 +72,7 @@ export function hostedModelPolicy(dataDirectory: string, env: NodeJS.ProcessEnv 
         ? { resumeCursors: {}, lastInstanceId: undefined, rewound: true, lastContextModel: undefined, appliedCompactionId: undefined }
         : {};
     },
-    error: () => Object.values(catalog).some(models => models.length) ? HOSTED_MODEL_SELECTION_ERROR : HOSTED_MODEL_SETUP_ERROR,
+    error: (): string => Object.values(catalog).some(models => models.length) ? HOSTED_MODEL_SELECTION_ERROR : HOSTED_MODEL_SETUP_ERROR,
     configs(): InstanceConfigMap {
       const configs: InstanceConfigMap = {};
       // Saved instance commands are tenant-editable; only the operator may replace the bundled executables.

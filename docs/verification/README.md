@@ -123,6 +123,10 @@ The [managed HITEK onboarding fixture](hitek-onboarding.md) checks the hosted
 welcome, CRM OAuth and access discovery, pending AI status, persistence and
 managed Settings at desktop and mobile sizes without live credentials.
 
+The [HITEK managed AI tests](../../deploy/hitek/ai-gateway/README.md#verification)
+exercise a complete chat through an isolated credential gateway and the real
+Agent Desk server, with fake keys and synthetic responses.
+
 The [Whop fixture](whop.md) checks its one-click setup, cancellation, denied
 consent, discovery failures, reconnect and disconnect using that same registry
 and a synthetic provider, without accessing a real Whop account.
