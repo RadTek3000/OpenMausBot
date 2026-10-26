@@ -17,6 +17,7 @@ multi-tenant control plane or a production availability promise.
 
    ```text
    HITEK_IMAGE_TARGET=hitek-railway
+   ENGINES=<selected engine CLI package, for example @openai/codex>
    PORT=8080
    HITEK_SUPABASE_URL=<HITEK-owned Supabase HTTPS origin>
    HITEK_SUPABASE_PUBLISHABLE_KEY=<Supabase publishable or legacy anon key>
@@ -28,6 +29,11 @@ multi-tenant control plane or a production availability promise.
    set an upstream control-plane URL or put a Supabase service-role key here.
    The entrypoint fails closed without HITEK sign-in, a named admin email, a
    public HTTPS origin, or the mounted volume.
+   `ENGINES` is a build argument, not an API credential. After deployment,
+   sign in to that engine through the app's Engines settings or configure its
+   provider credential through the service's secrets. The image builds with
+   no engine CLI when `ENGINES` is unset; health alone does not prove that a
+   bot can answer.
 4. Under Networking, generate a Railway domain and point it at port `8080`.
    Railway supplies `RAILWAY_PUBLIC_DOMAIN` to the container. With a custom
    domain, set `OMB_PUBLIC_URL=https://<custom-domain>` explicitly. The OAuth

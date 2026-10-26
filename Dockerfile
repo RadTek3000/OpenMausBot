@@ -177,7 +177,7 @@ HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=5 \
 USER root
 CMD ["node", "/app/dist-server/cloud-home-start.js"]
 
-# The self-hosted server, last so a plain `docker build .` builds it.
+# The self-hosted server; the final alias keeps it the plain-build default.
 FROM runtime AS server
 # Optional engine CLIs baked into the image (space-separated npm packages).
 ARG ENGINES=""
