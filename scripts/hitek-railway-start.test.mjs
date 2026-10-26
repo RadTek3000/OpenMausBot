@@ -1,5 +1,8 @@
+import { chmodSync, lstatSync, mkdtempSync, rmSync, symlinkSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { childEnvironments, railwayConfiguration } from "./hitek-railway-start.mjs";
+import { childEnvironments, prepareDataVolume, railwayConfiguration } from "./hitek-railway-start.mjs";
 
 const hosted = {
   RAILWAY_PROJECT_ID: "fixture",
@@ -39,5 +42,32 @@ describe("HITEK Railway launcher", () => {
     expect(edge.PORT).toBe("8080");
     expect(edge).not.toHaveProperty("HITEK_SUPABASE_PUBLISHABLE_KEY");
     expect(edge).not.toHaveProperty("HITEK_MCP_OAUTH_CLIENT_ID");
+  });
+
+  it.skipIf(process.platform === "win32")("makes a mounted volume and agent state writable only by the service user", () => {
+    const volume = mkdtempSync(join(tmpdir(), "hitek-railway-"));
+    try {
+      chmodSync(volume, 0o500);
+      const ids = { uid: process.getuid(), gid: process.getgid() };
+      prepareDataVolume(volume, ids);
+      expect(lstatSync(volume).mode & 0o777).toBe(0o700);
+      expect(lstatSync(join(volume, ".openmausbot")).mode & 0o777).toBe(0o700);
+      prepareDataVolume(volume, ids);
+    } finally {
+      rmSync(volume, { recursive: true, force: true });
+    }
+  });
+
+  it.skipIf(process.platform === "win32")("rejects a symlinked agent state directory", () => {
+    const volume = mkdtempSync(join(tmpdir(), "hitek-railway-"));
+    const outside = mkdtempSync(join(tmpdir(), "hitek-railway-outside-"));
+    try {
+      symlinkSync(outside, join(volume, ".openmausbot"));
+      const ids = { uid: process.getuid(), gid: process.getgid() };
+      expect(() => prepareDataVolume(volume, ids)).toThrow(/must be a directory/);
+    } finally {
+      rmSync(volume, { recursive: true, force: true });
+      rmSync(outside, { recursive: true, force: true });
+    }
   });
 });

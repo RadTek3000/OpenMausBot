@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
-import { chownSync, readFileSync, statSync } from "node:fs";
+import { chmodSync, chownSync, lstatSync, mkdirSync, readFileSync, statSync } from "node:fs";
+import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
 export function railwayConfiguration(env = process.env) {
@@ -63,14 +64,31 @@ function serviceIds() {
   return { uid: Number(fields[2]), gid: Number(fields[3]) };
 }
 
+export function prepareDataVolume(path, { uid, gid }) {
+  const volume = statSync(path);
+  if (!volume.isDirectory()) throw new Error(`${path} is not a directory`);
+  if (volume.uid !== uid || volume.gid !== gid) chownSync(path, uid, gid);
+  chmodSync(path, 0o700);
+
+  const dataDir = join(path, ".openmausbot");
+  try {
+    const entry = lstatSync(dataDir);
+    if (!entry.isDirectory() || entry.isSymbolicLink()) throw new Error(`${dataDir} must be a directory`);
+  } catch (error) {
+    if (error?.code !== "ENOENT") throw error;
+    mkdirSync(dataDir, { mode: 0o700 });
+  }
+  const state = statSync(dataDir);
+  if (state.uid !== uid || state.gid !== gid) chownSync(dataDir, uid, gid);
+  chmodSync(dataDir, 0o700);
+}
+
 export function startRailway(env = process.env) {
   process.umask(0o077);
   if (process.getuid?.() !== 0) throw new Error("Railway image must start as root to prepare its volume");
   const config = railwayConfiguration(env);
   const ids = serviceIds();
-  const volume = statSync("/data");
-  if (!volume.isDirectory()) throw new Error("/data is not a directory");
-  if (volume.uid !== ids.uid || volume.gid !== ids.gid) chownSync("/data", ids.uid, ids.gid);
+  prepareDataVolume("/data", ids);
   const { server, edge } = childEnvironments(env, config);
   const children = [
     spawn(process.execPath, ["/app/dist-server/server-launcher.js"], { cwd: "/app", env: server, uid: ids.uid, gid: ids.gid, stdio: "inherit" }),
