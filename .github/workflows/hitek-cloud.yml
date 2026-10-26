@@ -32,7 +32,7 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm lint
       - name: HITEK regression tests
-        run: pnpm exec vitest run server/hitek-supabase-auth.test.ts server/hitek-cloud-api.test.ts server/account-signin.test.ts server/mcp-oauth.test.ts server/routes/hitek-connect.test.ts scripts/hitek-cloud.test.mjs scripts/hitek-usage-export.test.mjs src/lib/analytics.test.ts src/lib/analytics.wire.test.ts src/pair/PairPage.test.ts server/brand.test.ts src/lib/brand.test.ts
+        run: pnpm exec vitest run server/hitek-supabase-auth.test.ts server/hitek-cloud-api.test.ts server/account-signin.test.ts server/mcp-oauth.test.ts server/routes/hitek-connect.test.ts scripts/hitek-cloud.test.mjs scripts/hitek-railway-start.test.mjs scripts/hitek-usage-export.test.mjs src/lib/analytics.test.ts src/lib/analytics.wire.test.ts src/pair/PairPage.test.ts server/brand.test.ts src/lib/brand.test.ts
       - name: Deployment script syntax
         run: bash -n deploy/hitek/cloud/deploy.sh && bash -n deploy/hitek/cloud/backup.sh
 
@@ -70,6 +70,16 @@ jobs:
         env:
           IMAGE: ${{ steps.reference.outputs.image }}
         run: node scripts/smoke-hitek-cloud.mjs "$IMAGE"
+      - uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a
+        with:
+          context: .
+          target: hitek-railway
+          load: true
+          tags: hitek-railway:ci
+          cache-from: type=gha,scope=hitek-cloud
+          cache-to: type=gha,scope=hitek-cloud,mode=max
+      - name: Verify the isolated Railway deployment
+        run: node scripts/smoke-hitek-railway.mjs hitek-railway:ci
       - name: Publish tested image
         env:
           IMAGE: ${{ steps.reference.outputs.image }}

@@ -24,6 +24,8 @@
 # collect, and Chrome needs shared memory (docs/browser-packaging.md, "Process
 # hygiene"). On Fly Machines (the Cloud home) Fly's own init is PID 1.
 
+ARG HITEK_IMAGE_TARGET=server
+
 FROM caddy:2.10.2 AS edge
 # Official Caddy carries a privileged-port file capability. The Cloud home's
 # edge uses the unprivileged 8080, and a plain copy to a fresh inode drops the
@@ -193,3 +195,19 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
 # (a copied workspace committing, server/restart.ts), so the container, and a
 # Caddy sharing its network, stays up through that restart.
 CMD ["node", "dist-server/server-launcher.js"]
+
+FROM server AS hitek-railway
+USER root
+COPY --from=edge /caddy /usr/local/bin/caddy
+COPY deploy/hitek/railway/Caddyfile /app/railway/Caddyfile
+COPY scripts/hitek-railway-start.mjs /app/railway/start.mjs
+RUN chmod go-w /app/railway /app/railway/Caddyfile /app/railway/start.mjs \
+  && test "$(stat -c %u /app/railway/start.mjs)" = 0 \
+  && PORT=8080 caddy validate --config /app/railway/Caddyfile --adapter caddyfile
+USER root
+EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD curl -sf http://127.0.0.1:${PORT:-8080}/api/health | grep -q openmausbot || exit 1
+CMD ["node", "/app/railway/start.mjs"]
+
+FROM ${HITEK_IMAGE_TARGET} AS final

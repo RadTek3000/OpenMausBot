@@ -1,0 +1,22 @@
+{
+  admin off
+}
+
+:{$PORT} {
+  encode zstd gzip
+  header {
+    Strict-Transport-Security "max-age=31536000"
+    X-Content-Type-Options nosniff
+    Referrer-Policy no-referrer
+    -Server
+  }
+  handle /hooks/* {
+    reverse_proxy 127.0.0.1:8800
+  }
+  handle {
+    reverse_proxy 127.0.0.1:8799 {
+      header_up X-Forwarded-Proto https
+      flush_interval -1
+    }
+  }
+}

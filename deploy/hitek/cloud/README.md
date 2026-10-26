@@ -1,5 +1,9 @@
 # HITEK Cloud Pilot
 
+For a small Railway Free staging experiment, see
+[`../railway/README.md`](../railway/README.md). It uses the same HITEK agent
+server but packages the private listener and edge into one service.
+
 This is the HITEK-owned hosting path on `hitek/cloud-hosting`. It runs the
 existing browser app and agent server on Linux. Dealers use a URL and email
 code; they do not install Node, manage MCP tokens or run the desktop app.
