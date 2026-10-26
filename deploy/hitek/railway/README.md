@@ -34,6 +34,20 @@ multi-tenant control plane or a production availability promise.
    provider credential through the service's secrets. The image builds with
    no engine CLI when `ENGINES` is unset; health alone does not prove that a
    bot can answer.
+   For a new Supabase Free project, first configure a HITEK-controlled SMTP
+   sender and change its Magic Link email template to contain `{{ .Token }}`.
+   Supabase's default template sends a link, while this app verifies a numeric
+   code. New Free projects cannot customize templates with Supabase's default
+   SMTP service; that service also only sends to organization members at a
+   low rate. Do not grant dealers Supabase organization access to work around
+   this. See Supabase's [OTP guide](https://supabase.com/docs/guides/auth/auth-email-passwordless),
+   [SMTP guide](https://supabase.com/docs/guides/auth/auth-smtp) and
+   [Free-tier template change](https://supabase.com/changelog/46599-changes-to-email-template-customisation-on-free-tier).
+   A temporary staging SMTP sender can be replaced in Supabase under
+   Authentication > Emails > SMTP Settings by updating the sender address,
+   host, port, username and password. Send a test code after the switch; no
+   agent code or database change is needed. If the old credential is also
+   used by CRM, keep it active until CRM mail has its own replacement.
 4. Under Networking, generate a Railway domain and point it at port `8080`.
    Railway supplies `RAILWAY_PUBLIC_DOMAIN` to the container. With a custom
    domain, set `OMB_PUBLIC_URL=https://<custom-domain>` explicitly. The OAuth
